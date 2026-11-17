@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="سجل">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f7">
+<title>سجل إنجاز عمر المانع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body><div class="app">
+  <header class="hdr gut" data-tauri-drag-region>
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></div>
+      <div><h1>سجل إنجاز عمر المانع</h1><p id="todayLabel" class="num"></p></div>
+    </div>
+    <div class="hmid">
+      <div class="seg" role="group" aria-label="الفترة"><button data-act="period" data-p="month" id="pMonth">شهري</button><button data-act="period" data-p="year" id="pYear">سنوي</button></div>
+      <select class="sel" id="rMonth" aria-label="الشهر"></select>
+      <select class="sel num" id="yearSel" aria-label="السنة"></select>
+      <button class="ghost" data-act="clear" id="clearBtn" hidden>مسح الفلاتر</button>
+    </div>
+    <div class="hend">
+      <button class="ghost" data-act="ask" id="askBtn" hidden>اسأل Claude</button>
+      <div class="skins" id="skins" role="group" aria-label="المظهر"></div>
+      <button class="iconbtn" data-act="menu" aria-label="المزيد" data-tip="تصدير وأدوات"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+    </div>
+    <div class="menu" id="menu" hidden>
+      <button data-act="m-ai" id="mAi" hidden>صياغة ملخص رسمي للفترة</button>
+      <button data-act="m-csv">تصدير Excel للفترة</button>
+      <button data-act="m-copy">نسخ التقرير كنص</button>
+      <hr>
+      <button data-act="m-json">حفظ نسخة احتياطية</button>
+      <label for="importFile">استيراد نسخة احتياطية</label>
+      <hr>
+      <div class="note" id="storeNote"></div>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </header>
+
+  <div class="entry gut">
+    <form class="ebar" id="addForm" autocomplete="off">
+      <div class="cpick" id="catPick" role="group" aria-label="التصنيف"></div>
+      <input class="in t" id="fTitle" placeholder="سجّل عملاً جديداً…" maxlength="300" aria-label="وصف العمل">
+      <select class="in a" id="fAction" aria-label="الإجراء"></select>
+      <input class="in rf num" id="fRef" maxlength="60" aria-label="الرقم المرجعي">
+      <input class="in p" id="fParty" maxlength="120" placeholder="الجهة / الطرف" aria-label="الجهة">
+      <input class="in d num" type="date" id="fDate" aria-label="التاريخ">
+      <input class="in h num" type="number" id="fHours" min="0" max="24" step="0.25" placeholder="ساعات" aria-label="الساعات">
+      <div class="seg" id="fStatus" role="group" aria-label="الحالة"><button type="button" data-st="done" aria-pressed="true">منجز</button><button type="button" data-st="progress" aria-pressed="false">جارٍ</button></div>
+      <button type="button" class="iconbtn" id="notesBtn" aria-label="إضافة تفاصيل" data-tip="إضافة تفاصيل أو نتيجة"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+      <button class="pri" type="submit">تسجيل</button>
+      <div class="notes-row" id="notesRow" hidden><textarea class="in" id="fNotes" maxlength="3000" placeholder="التفاصيل، النتيجة أو التوصية"></textarea></div>
+    </form>
+  </div>
+
+  <div class="body gut">
+    <section class="dash">
+      <div class="fbar" id="fbar"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="tiles">
+        <div class="tile"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
+        <div class="tile"><div class="th"><h3>حسب التصنيف</h3><small>اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
+        <div class="tile"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small></div><div class="tb" id="cal"></div></div>
+        <div class="tile"><div class="th"><h3>نوع الإجراء</h3><small>اضغط للتصفية</small></div><div class="tb" id="acts"></div></div>
+        <div class="tile"><div class="th"><h3>أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
+        <div class="tile"><div class="th"><h3>نسبة الإنجاز</h3><small>اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>
+      </div>
+    </section>
+    <section class="rec" aria-label="سجل الأعمال">
+      <div class="rh">
+        <div class="row1"><h2>سجل الأعمال</h2><span class="cnt num" id="tCnt"></span></div>
+        <div class="row2">
+          <input class="search" type="search" id="q" placeholder="بحث بالوصف أو الرقم أو الجهة" aria-label="بحث">
+          <div class="seg" id="stSeg"><button data-act="st" data-v="" aria-pressed="true">الكل</button><button data-act="st" data-v="progress" aria-pressed="false">جارٍ</button></div>
+          <button class="iconbtn" data-act="sortdir" id="sortBtn" data-tip="الأحدث أولاً"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 12h5M14 18h3"/></svg></button>
+        </div>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="tip" id="tip" hidden></div>
+<div id="toastRoot"></div>
+<script src="app.js"></script>
+</body>
+</html>
