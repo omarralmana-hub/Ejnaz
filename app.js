@@ -295,6 +295,9 @@ document.addEventListener('click',ev=>{
     case 'm-csv':menu.hidden=true;exportCsv();break;
     case 'm-copy':menu.hidden=true;copyText(reportText());break;
     case 'm-json':menu.hidden=true;backup();break;
+    case 'tab':setTab(b.dataset.tab);break;
+    case 'sheet-open':sheet(true);break;
+    case 'sheet-close':sheet(false);break;
     case 'close':closeModal();break;
     case 'ask':openChat();break;
     case 'undo':undoLast(b.dataset.i);break;
@@ -320,8 +323,20 @@ $('addForm').addEventListener('submit',async ev=>{
   const date=$('fDate').value||today(),h=parseFloat($('fHours').value);
   const e={title,date,category:S.form.cat,action:$('fAction').value,ref:$('fRef').value.trim(),party:$('fParty').value.trim(),hours:isFinite(h)&&h>0?h:null,status:S.form.status,notes:$('fNotes').value.trim(),createdAt:Date.now(),updatedAt:Date.now()};
   if(await safe(()=>S.store.add(e),date===today()?'تم التسجيل':'تم التسجيل بتاريخ '+fShort.format(parse(date)))){
-    ['fTitle','fRef','fParty','fHours','fNotes'].forEach(i=>$(i).value='');$('notesRow').hidden=true;$('fTitle').focus()}
+    ['fTitle','fRef','fParty','fHours','fNotes'].forEach(i=>$(i).value='');$('notesRow').hidden=true;
+    if(phone.matches){sheet(false);setTab('list');$('fTitle').blur()}else $('fTitle').focus()}
 });
+
+/* ---------- phone layout (width <= 700px): bottom tabs + "new work" sheet ---------- */
+const phone=matchMedia('(max-width:700px)');
+const appEl=document.querySelector('.app');
+appEl.dataset.tab='list';
+function setTab(t){appEl.dataset.tab=t;document.querySelectorAll('.tabbar [data-tab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t));window.scrollTo(0,0)}
+function sheet(open){appEl.classList.toggle('sheet-open',open);$('scrim').hidden=!open;if(!open)document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}
+/* themes live in the header on desktop, inside the menu on the phone */
+function placeSkins(){const sk=$('skins');if(phone.matches)menu.prepend(sk);else document.querySelector('.hend').insertBefore(sk,document.querySelector('.hend [data-act="menu"]'))}
+placeSkins();
+(phone.addEventListener?phone.addEventListener.bind(phone,'change'):phone.addListener.bind(phone))(()=>{placeSkins();if(!phone.matches)sheet(false)});
 
 /* ---------- edit modal ---------- */
 function openEdit(id){

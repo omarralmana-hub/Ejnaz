@@ -45,7 +45,8 @@
     <input type="file" id="importFile" accept=".json,application/json" hidden>
   </header>
 
-  <div class="entry gut">
+  <div class="entry gut" id="entrySheet">
+    <div class="sheet-h"><span class="grab" aria-hidden="true"></span><h2>عمل جديد</h2><button type="button" class="ghost" data-act="sheet-close">إغلاق</button></div>
     <form class="ebar" id="addForm" autocomplete="off">
       <div class="cpick" id="catPick" role="group" aria-label="التصنيف"></div>
       <input class="in t" id="fTitle" placeholder="سجّل عملاً جديداً…" maxlength="300" aria-label="وصف العمل">
@@ -88,6 +89,12 @@
   </div>
 </div>
 
+<div class="scrim" id="scrim" data-act="sheet-close" hidden></div>
+<nav class="tabbar" aria-label="التنقل">
+  <button data-act="tab" data-tab="list" aria-pressed="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>الأعمال</span></button>
+  <button class="fab" data-act="sheet-open" aria-label="عمل جديد"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-act="tab" data-tab="report" aria-pressed="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>التقارير</span></button>
+</nav>
 <div id="modalRoot"></div>
 <div class="tip" id="tip" hidden></div>
 <div id="toastRoot"></div>

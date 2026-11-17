@@ -270,3 +270,103 @@ html[data-platform] .search,html[data-platform] .in{-webkit-user-select:text;use
   .skins{flex-wrap:wrap}
 }
 @media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.in.a,.in.rf,.in.p,.in.d{flex:1 1 40%}}
+
+/* ================= iPhone / small phone layout (<= 700px) =================
+   Bottom tabs (works / reports), a "+" button that opens the new-work form as a bottom sheet,
+   44px touch targets, 16px inputs (stops iOS zooming on focus). Desktop is untouched. */
+.sheet-h,.tabbar,.scrim{display:none}
+@media (max-width:700px){
+  :root{--h:44px}
+  html,body{height:auto}
+  body{overflow:auto;font-size:14px;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+  .app{height:auto;min-height:100vh;min-height:100dvh;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  input,select,textarea,.in,.search,.sel{font-size:16px}
+
+  /* header: brand + menu; period controls only on the Reports tab */
+  .hdr{position:sticky;top:0;height:auto;flex-wrap:wrap;padding-block:8px;row-gap:8px}
+  .brand h1{font-size:16px}
+  .hend .skins{display:none}
+  .hmid{order:3;flex:1 0 100%;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .hmid::-webkit-scrollbar{display:none}
+  .app[data-tab="list"] .hmid{display:none}
+  .hmid{flex-wrap:nowrap}
+  .hmid .sel{flex:1 1 0;min-width:0;padding:0 12px}
+  .seg button{height:36px;padding:0 16px;font-size:14px}
+  .sel{padding:0 16px;font-size:15px}
+  .ghost{font-size:14px}
+  .menu{position:fixed;top:auto;left:16px;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));min-width:0;border-radius:var(--r);padding:8px;z-index:25}
+  .menu button,.menu label{height:48px;font-size:15px}
+  .menu .skins{display:flex;justify-content:space-around;padding:12px 8px}
+  .menu .sw{width:32px;height:32px}
+
+  /* tabs decide what is shown */
+  .app[data-tab="list"] .dash{display:none}
+  .app[data-tab="report"] .rec{display:none}
+  .body{display:block;padding-top:var(--g)}
+  .dash{display:flex;flex-direction:column;width:auto;gap:var(--g)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{min-height:84px}
+  .kpi b{font-size:24px}
+  .tiles{display:grid;grid-template-columns:1fr;grid-template-rows:none;gap:var(--g)}
+  .tile{aspect-ratio:auto;height:min(92vw,380px)}
+  .fbar{height:auto;min-height:24px;flex-wrap:wrap;white-space:normal}
+
+  /* works list */
+  .rec{height:auto;overflow:visible;background:none;box-shadow:none;border-radius:0}
+  .rh{position:sticky;top:57px;z-index:4;background:var(--bg);border:0;padding:8px 0 12px;gap:12px;grid-template-columns:minmax(0,1fr)}
+  .rec{min-width:0;width:100%}
+  .search{width:0}
+  .app,.body,.dash,.tiles,.kpis{min-width:0;max-width:100%}
+  .rh h2{font-size:20px;line-height:28px}
+  .rh .row1{height:28px}
+  .rh .row2{gap:8px}
+  .search{height:44px;font-size:16px;padding:0 16px}
+  .list{overflow:visible;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
+  .dh{position:static;height:32px;padding:0 16px;font-size:12px;background:var(--sunk)}
+  .it{min-height:68px;padding:12px 16px;gap:12px}
+  .it .tt{font-size:16px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .it .mt{font-size:13px}
+  .it .en{font-size:12px}
+  .it:active{background:var(--sunk)}
+  .chk{width:36px;height:36px}
+  .pill{height:24px;font-size:12px}
+  .btn{height:44px;font-size:14px}
+
+  /* tab bar */
+  .tabbar{display:grid;grid-template-columns:1fr 72px 1fr;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:12;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:saturate(1.6) blur(18px);-webkit-backdrop-filter:saturate(1.6) blur(18px);border-top:1px solid var(--line)}
+  .tabbar button{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;color:var(--muted);font-size:11px;font-weight:500;cursor:pointer}
+  .tabbar button[aria-pressed="true"]{color:var(--accent)}
+  .tabbar .fab{justify-self:center;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 45%,transparent);margin-top:-18px;transition:transform .15s}
+  .tabbar .fab:active{transform:scale(.93)}
+
+  /* new-work form as a bottom sheet */
+  .scrim{display:block;position:fixed;inset:0;z-index:18;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .scrim[hidden]{display:none}
+  .entry{position:fixed;left:0;right:0;bottom:0;z-index:20;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.25);padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(105%);visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s .32s}
+  .app.sheet-open .entry{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+  .sheet-h{display:flex;align-items:center;justify-content:space-between;position:relative;height:56px}
+  .sheet-h .grab{position:absolute;top:0;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:var(--line)}
+  .sheet-h h2{margin:8px 0 0;font-size:18px}
+  .sheet-h .ghost{margin-top:8px}
+  .ebar{background:none;box-shadow:none;padding:0;gap:12px;border-radius:0}
+  .cpick{display:grid;grid-template-columns:repeat(4,1fr);height:auto;width:100%;order:0;padding:4px}
+  .cpick button{height:44px;justify-content:center;font-size:14px;padding:0 4px}
+  .in{height:48px;border-radius:var(--r-s);padding:0 16px}
+  .in.t{order:1;flex:1 1 100%}
+  .in.a{order:2;flex:1 1 calc(50% - 6px)}.in.rf{order:3;flex:1 1 calc(50% - 6px)}
+  .in.p{order:4;flex:1 1 100%}
+  .in.d{order:5;flex:1 1 calc(50% - 6px)}.in.h{order:6;flex:1 1 calc(50% - 6px)}
+  #fStatus{order:7;flex:1 1 calc(100% - 60px);height:48px}
+  #fStatus button{flex:1;height:40px}
+  #notesBtn{order:8}
+  .notes-row{order:9}.notes-row textarea{height:96px;font-size:16px}
+  .pri{order:10;flex:1 1 100%;height:52px;font-size:17px;border-radius:var(--r-m)}
+
+  /* edit dialog as a bottom sheet too */
+  .overlay{place-items:end stretch;padding:0}
+  .modal{width:100%;max-height:92dvh;border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+  .mrow3{grid-template-columns:1fr 1fr}
+  .modal textarea.in{font-size:16px}
+  .toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+}

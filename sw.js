@@ -1,5 +1,5 @@
 /* Offline cache for the web/iPhone version. Bump VERSION when ui files change. */
-const VERSION = 'sijil-v1';
+const VERSION = 'sijil-v2';
 const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
