@@ -67,23 +67,13 @@
   <div class="bulkbar gut" id="bulkBar" hidden><div class="bar-in"></div></div>
 
   <div class="body gut" id="bodyBox">
-    <aside class="rside" id="remSide" aria-label="التذكيرات" data-al="rb_title">
-      <div class="th"><h3 data-i="rb_title">التذكيرات</h3><button type="button" class="iconbtn" data-act="cal-add" aria-label="+" data-al="ev_add" data-tt="ev_add">+</button></div>
-      <div class="rb-chips" id="rbChips"></div>
-      <form class="rb-add" id="rbForm" autocomplete="off">
-        <input class="in" id="rbText" maxlength="120" placeholder="تذكير سريع…" data-ph="rb_ph" aria-label="تذكير سريع" data-al="rb_ph">
-        <div class="rb-row"><input type="time" class="in num" id="rbTime" aria-label="الوقت" data-al="ev_time"><button type="submit" class="pri" aria-label="+" data-al="ev_add">+</button></div>
-      </form>
-      <button type="button" class="btn sm rb-daily" data-act="m-remind" data-i="rb_daily">تذكير يومي</button>
-    </aside>
-    <div class="grip" id="remGrip" role="separator" aria-orientation="vertical" tabindex="0" aria-label="تغيير عرض التذكيرات" data-al="rs_resize"></div>
     <section class="dash">
       <div class="fbar" id="fbar"></div>
       <div class="kpis" id="kpis"></div>
       <div class="tiles">
         <div class="tile" data-tile="trend"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
         <div class="tile" data-tile="donut"><div class="th"><h3 data-i="by_cat">حسب التصنيف</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
-        <div class="tile" data-tile="cal"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small><button type="button" class="iconbtn cal-plus" data-act="cal-add" data-al="ev_add" data-tt="ev_add" aria-label="+">+</button></div><div class="tb" id="cal"></div></div>
+        <div class="tile" data-tile="cal"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small><button type="button" class="iconbtn cal-list" data-act="ev-all" aria-label="عناصر التقويم" data-al="ev_all" data-tt="ev_all"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></button><button type="button" class="iconbtn cal-plus" data-act="cal-add" data-al="ev_add" data-tt="ev_add" aria-label="+">+</button></div><div class="tb" id="cal"></div></div>
         <div class="tile" data-tile="acts"><div class="th"><h3 id="actT">نوع الإجراء</h3><div class="seg mini" id="actSeg" role="group"><button type="button" data-act="actview" data-v="actions" aria-pressed="true" data-i="seg_actions">الإجراءات</button><button type="button" data-act="actview" data-v="matters" aria-pressed="false" data-i="seg_matters">الملفات</button></div></div><div class="tb" id="acts"></div></div>
         <div class="tile" data-tile="wd"><div class="th"><h3 data-i="weekdays">أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
         <div class="tile" data-tile="ring"><div class="th"><h3 data-i="completion">نسبة الإنجاز</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>

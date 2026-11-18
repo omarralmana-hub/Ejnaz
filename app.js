@@ -70,10 +70,10 @@ function setLang(l,boot){
 const PRESETS=window.SIJIL_PRESETS||{};
 const PALETTE=['c1','c2','c3','c4','c5','c6','c7','c8'];
 const TILE_IDS=['trend','donut','cal','acts','wd','ring'];
-const BAR_IDS=['entry','kpis','fbar','rbar'];
+const BAR_IDS=['entry','kpis','fbar'];
 /* limits for everything the user can resize: [min, max, default] */
-const RESIZE={rem:[200,440,248],split:[.32,.78,.6]};
-const BLOCK_IDS=['hdr','date','entry','kpis','rec','rbar',...TILE_IDS];
+const RESIZE={split:[.32,.78,.6]};
+const BLOCK_IDS=['hdr','date','entry','kpis','rec',...TILE_IDS];
 const clone=o=>JSON.parse(JSON.stringify(o));
 const actVal=a=>a.ar||a.en||'';
 function presetCfg(id,keepPerson){
@@ -96,7 +96,7 @@ function normalizeCfg(c){
     let kpis=(Array.isArray(c.kpis)?c.kpis:[]).filter(ok).slice(0,6).map(k=>k.t==='cat'?{t:'cat',id:k.id}:{t:k.t});
     if(!kpis.length)kpis=[{t:'total'}];
     const pr=c.person||{};
-    return{v:1,preset:str(c.preset,20)||'custom',edited:!!c.edited,dept:nm(c.dept),person:{ar:str(pr.ar,60),en:str(pr.en,60)},cats,kpis,layout:normLayout(c.layout)};
+    return{v:1,preset:str(c.preset,20)||'custom',edited:!!c.edited,dept:nm(c.dept),person:{ar:str(pr.ar,60),en:str(pr.en,60),one:str(pr.one,60)},cats,kpis,layout:normLayout(c.layout)};
   }catch(e){return null}
 }
 function loadCfg(){
@@ -107,9 +107,12 @@ function applyConfig(){
   CATS={};CN=[];CATN={};ACTN={};
   CFG.cats.forEach(c=>{CN.push(c.id);CATN[c.id]=c.name;CATS[c.id]={color:'var(--'+c.color+')',actions:c.acts.map(actVal)};c.acts.forEach(a=>{ACTN[actVal(a)]=a})});
   const o=CFG.cats.find(c=>c.other)||CFG.cats[CFG.cats.length-1];DEFCAT=o?o.id:'أخرى';
+  /* older setups kept a separate name per language: the one on screen now becomes the single name */
+  if(CFG.edited&&CFG.person&&!CFG.person.one)CFG.person.one=CFG.person[LANG]||CFG.person.ar||CFG.person.en||'';
   OWNER=ownerName();
 }
-function ownerName(){const p=CFG&&CFG.person;return(p&&(p[LANG]||p.ar||p.en))||tr('owner')}
+/* the person's name is ONE name: it does not change with the interface language (person.one); only the factory default is localized */
+function ownerName(){const p=CFG&&CFG.person;return(p&&(p.one||p[LANG]||p.ar||p.en))||tr('owner')}
 function appTitle(){return LANG==='ar'?'سجل إنجاز '+OWNER:OWNER+' · Work Log'}
 function colorOf(id){return CATS[id]?CATS[id].color:catColor(id)}
 function refLabel(id){const c=CFG&&CFG.cats.find(x=>x.id===id),r=c&&c.ref;return(r&&(r[LANG]||r.ar||r.en))||tr('ref_f')}
@@ -161,7 +164,7 @@ function setupDraw(){
     return '<label class="lbl">'+tr('kpi_slot',i+1)+'<select class="in" data-kpi="'+i+'">'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o==='__none'?tr('kpi_none'):kpiLabel(o.startsWith('cat:')?{t:'cat',id:o.slice(4)}:{t:o}))+'</option>').join('')+'</select></label>'}).join('');
   const presetOpts=Object.keys(PRESETS).map(k=>'<option value="'+k+'">'+esc(PRESETS[k].name[LANG]||PRESETS[k].name.ar)+'</option>').join('');
   dlg(tr('setup_title'),'<div class="setup">'+
-    '<section><h4>'+tr('setup_who')+'</h4><div class="g2">'+f('dept.ar',tr('dept_ar'),W.dept.ar)+f('dept.en',tr('dept_en'),W.dept.en)+'</div><div class="g2">'+f('person.ar',tr('person_ar'),W.person.ar)+f('person.en',tr('person_en'),W.person.en)+'</div></section>'+
+    '<section><h4>'+tr('setup_who')+'</h4><div class="g2">'+f('dept.ar',tr('dept_ar'),W.dept.ar)+f('dept.en',tr('dept_en'),W.dept.en)+'</div><label class="lbl">'+tr('person_name')+f('person.one',tr('person_name'),W.person.one||ownerName())+'</label></section>'+
     '<section><h4>'+tr('setup_tpl')+'</h4><p class="note">'+tr('setup_tpl_help')+'</p><div class="frow"><select class="in" id="wsPreset">'+presetOpts+'</select><button type="button" class="btn" data-s="preset">'+tr('tpl_load')+'</button></div>'+
       '<div class="brow"><button type="button" class="btn" data-s="export">'+tr('tpl_export')+'</button><button type="button" class="btn" data-s="import">'+tr('tpl_import')+'</button></div></section>'+
     '<section><h4>'+tr('cats_h')+'</h4><p class="note">'+tr('cats_help')+'</p>'+cards+'<button type="button" class="btn" data-s="addcat">+ '+tr('cat_add')+'</button></section>'+
@@ -576,7 +579,7 @@ document.addEventListener('keydown',e=>{
   if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
   if(e.code==='Equal'||e.code==='NumpadAdd'||e.key==='+'){e.preventDefault();stepZoom(1)}else if(e.code==='Minus'||e.code==='NumpadSubtract'||e.key==='-'){e.preventDefault();stepZoom(-1)}else if(e.code==='Digit0'||e.code==='Numpad0'){e.preventDefault();applyZoom(1)}
 });
-function renderAll(){renderRemBar();renderHeader();renderFbar();renderKPIs();renderTrend();renderDonut();renderCal();renderActs();renderWd();renderRing();renderList();fillLists();renderNotes();renderBkBar()}
+function renderAll(){renderHeader();renderFbar();renderKPIs();renderTrend();renderDonut();renderCal();renderActs();renderWd();renderRing();renderList();fillLists();renderNotes();renderBkBar()}
 
 /* ---------- interactions ---------- */
 const menu=$('menu');
@@ -626,7 +629,7 @@ document.addEventListener('click',ev=>{
     case 'note-del-yes':S.noteDel=null;safe(()=>S.store.notes.remove(id),tr('note_deleted'));break;
     case 'm-trash':menu.hidden=true;openTrash();break;
     case 'm-backup':menu.hidden=true;openBackup();break;
-    case 'm-remind':menu.hidden=true;openRemind();break;
+
     case 'm-lock':menu.hidden=true;openLock();break;
     case 'm-new':menu.hidden=true;onMenu('new');break;
     case 'm-find':menu.hidden=true;onMenu('find');break;
@@ -936,32 +939,6 @@ function openTrash(){
     (rows.length?'<div class="mfoot"><span></span>'+(S.trashDel==='*'?'<button type="button" class="btn dan" data-act="t-empty-yes">'+tr('empty_q')+'</button>':'<button type="button" class="btn dan" data-act="t-empty">'+tr('empty_trash')+'</button>')+'</div>':''),'trashDlg');
 }
 
-/* ---------- daily reminder: a calendar file (.ics) that repeats weekly on the chosen days ---------- */
-function icsText(time,days,text){
-  const [h,m]=time.split(':').map(Number),t0=new Date(),st=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate(),h,m),en=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate(),h,m+15);
-  const f=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
-  const e2=s=>String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z');
-  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Sijil//Work Log//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:sijil-reminder-'+Date.now()+'@sijil.local','DTSTAMP:'+stamp,'DTSTART:'+f(st),'DTEND:'+f(en),
-    'RRULE:FREQ=WEEKLY;BYDAY='+days.join(','),'SUMMARY:'+e2(text),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+e2(text),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n')+'\r\n';
-}
-function openRemind(){
-  let r={};try{r=JSON.parse(lsGet('sijil.remind')||'{}')}catch(e){}
-  const codes=['SU','MO','TU','WE','TH','FR','SA'],days=r.days||['SU','MO','TU','WE','TH'];
-  dlg(tr('rm_title'),'<label class="lbl">'+tr('rm_time')+'<input type="time" class="in num" id="rmTime" value="'+esc(r.time||'16:30')+'"></label>'+
-    '<div class="lbl">'+tr('rm_days')+'<div class="dpick" id="rmDays">'+codes.map((c,i)=>'<button type="button" class="dp" data-c="'+c+'" aria-pressed="'+days.includes(c)+'">'+esc(WD[i])+'</button>').join('')+'</div></div>'+
-    '<label class="lbl">'+tr('rm_text')+'<input class="in" id="rmText" maxlength="120" value="'+esc(r.text||tr('rm_default'))+'"></label><p class="note">'+tr('rm_help')+'</p>'+
-    '<div class="mfoot"><span></span><button type="button" class="pri" id="rmGo">'+tr('rm_get')+'</button></div>');
-  document.querySelectorAll('#rmDays .dp').forEach(b=>b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true'));
-  $('rmGo').onclick=async()=>{
-    const ds=[...document.querySelectorAll('#rmDays .dp')].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.dataset.c);
-    if(!ds.length){toast(tr('rm_need_day'));return}
-    const time=$('rmTime').value||'16:30',text=$('rmText').value.trim()||tr('rm_default');
-    lsSet('sijil.remind',JSON.stringify({time,days:ds,text}));
-    if(await saveFile(tr('rm_file')+'.ics',icsText(time,ds,text)))closeModal();
-  };
-}
-
 /* ---------- bulk work-list bar: add many works at once, each with its own status ---------- */
 const BULK={rows:[],date:'',cat:'',open:false};
 const ST3=['done','progress','todo'];
@@ -1057,12 +1034,12 @@ function normEvents(a){
 }
 async function evLoad(){
   try{const raw=S.store&&S.store.events?await S.store.events.get():null;const n=normEvents(raw);
-    if(JSON.stringify(n)!==JSON.stringify(EV.list)){EV.list=n;renderCal();renderCalUp()}}catch(e){}
+    if(JSON.stringify(n)!==JSON.stringify(EV.list)){EV.list=n;renderCal()}}catch(e){}
   EV.loaded=true;remindTick();
 }
 async function evSave(){
   try{if(S.store&&S.store.events)await S.store.events.set(EV.list)}catch(e){toast(errMsg(e))}
-  renderCal();renderCalUp();
+  renderCal();
 }
 const evOn=d=>EV.list.filter(e=>e.date===d);
 const evBase=ev=>{const[h,m]=(ev.time||(ev.kind==='deadline'?'17:00':'09:00')).split(':').map(Number),d=parse(ev.date);d.setHours(h,m,0,0);return d};
@@ -1079,7 +1056,7 @@ function evCountdown(ev){
 const evIcon=ev=>ev.pinned?ICON.pin(true):ev.kind==='deadline'?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 004 0"/></svg>';
 const ciRow=(e,t)=>'<div class="ci'+(e.pinned?' pin':'')+(e.kind==='deadline'?' dl':'')+(e.date<t&&!e.done?' late':'')+(e.done?' fin':'')+'" data-act="ev-edit" data-id="'+e.id+'"><span class="ci-i">'+evIcon(e)+'</span><span class="ci-t"><b>'+esc(e.text||tr('ev_deadline'))+'</b><small class="num">'+esc(fShort.format(parse(e.date)))+(e.time?' · '+e.time:'')+' · '+esc(evCountdown(e))+(e.remind.on?' · \u{1F514}':'')+'</small></span>'+(e.done?'':'<button type="button" class="chk" data-act="ev-done" data-id="'+e.id+'" data-tip="'+tr('mark_done')+'" aria-label="'+tr('mark_done')+'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>')+'</div>';
 const evUpcoming=()=>{const t=today();return EV.list.filter(e=>!e.done&&(e.pinned||e.date>=t)).sort((a,b)=>(+b.pinned-+a.pinned)||((a.date+(a.time||''))<(b.date+(b.time||''))?-1:1))};
-function renderCalUp(){renderRemBar()}
+
 function openUpcoming(){
   const t=today(),l=evUpcoming(),past=EV.list.filter(e=>e.done).sort((a,b)=>a.date<b.date?1:-1).slice(0,8);
   dlg(tr('ev_all'),'<div class="tlist">'+(l.length?l.map(e=>ciRow(e,t)).join(''):'<div class="empty" style="min-height:80px">'+tr('ev_none')+'</div>')+(past.length?'<div class="note" style="margin-top:8px">'+tr('ev_finished')+'</div>'+past.map(e=>ciRow(e,t)).join(''):'')+'</div><div class="mfoot"><span></span><button type="button" class="pri" data-act="cal-add">+ '+tr('ev_add')+'</button></div>','dayDlg');
@@ -1196,28 +1173,6 @@ function remindCard(ev,txt,test){
 setInterval(remindTick,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)remindTick()});
 
-/* ---------- reminder bar: what is coming up, and a one-line quick add ---------- */
-/* chips that were not on screen before slide up into place (the first paint stays still) */
-function renderRemBar(){
-  const el=$('rbChips');if(!el)return;const before=renderRemBar.ids;
-  renderRemBarRaw();
-  const now=new Set([...el.querySelectorAll('.rb-chip')].map(c=>c.dataset.id));
-  if(before&&!reduceMotion())el.querySelectorAll('.rb-chip').forEach((c,i)=>{if(!before.has(c.dataset.id)){c.classList.add('in');c.style.animationDelay=Math.min(i,6)*40+'ms'}});
-  renderRemBar.ids=now;
-}
-function renderRemBarRaw(){
-  const el=$('rbChips');if(!el)return;const t=today(),l=evUpcoming().slice(0,8);
-  el.innerHTML=l.length?l.map(e=>'<span class="rb-chip'+(e.pinned?' pin':'')+(e.kind==='deadline'?' dl':'')+(e.date<t?' late':'')+'" data-act="ev-edit" data-id="'+e.id+'" role="button" tabindex="0"><i>'+evIcon(e)+'</i><b>'+esc(e.text)+'</b><small class="num">'+(e.date===t?'':esc(fShort.format(parse(e.date)))+' ')+(e.time||'')+'</small><button type="button" class="chk" data-act="ev-done" data-id="'+e.id+'" aria-label="'+tr('mark_done')+'" data-tip="'+tr('mark_done')+'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button></span>').join('')+(evUpcoming().length>8?'<button type="button" class="ci-more" data-act="ev-all">+'+(evUpcoming().length-8)+'</button>':''):'<span class="note">'+tr('rb_none')+'</span>';
-}
-function wireRemBar(){
-  const f=$('rbForm');if(!f)return;
-  f.addEventListener('submit',async e=>{
-    e.preventDefault();const text=$('rbText').value.trim();if(!text)return;const time=$('rbTime').value||'';
-    EV.list.push({id:evNewId(),date:today(),time,text:text.slice(0,500),pinned:false,kind:'note',done:false,remind:normRemind({on:!!time,offs:[0],methods:['app','sound']}),createdAt:Date.now(),snoozeUntil:0});
-    $('rbText').value='';$('rbTime').value='';await evSave();toast(tr(time?'rb_added_t':'rb_added'));remindTick();
-  });
-}
-
 /* ---------- the name in the title can be edited in place ---------- */
 function editTitle(ev){
   const h=document.querySelector('.brand h1');if(!h||h.querySelector('input')||CZ.on)return;
@@ -1237,9 +1192,9 @@ function editTitle(ev){
 /* renaming only touches the title and the saved setup: nothing else is redrawn, so it is instant */
 function quickName(v){
   v=v.trim().slice(0,60);if(!v)return;
-  const cfg=clone(CFG),other=LANG==='ar'?'en':'ar';
-  if(!cfg.person[other]||cfg.person[other]===(I18N[other]&&I18N[other].owner))cfg.person[other]=v;
-  cfg.person[LANG]=v;cfg.edited=true;CFG=cfg;OWNER=ownerName();applyStatic();
+  const cfg=clone(CFG);
+
+  cfg.person={ar:v,en:v,one:v};cfg.edited=true;CFG=cfg;OWNER=ownerName();applyStatic();
   lsSet('sijil.cfg',JSON.stringify(CFG));
   try{if(S.store&&S.store.config)S.store.config.set(CFG)}catch(e){}
 }
@@ -1254,9 +1209,9 @@ function normLayout(l){
   const num=(v,lo,hi,d)=>{v=+v;return isFinite(v)&&v>=lo&&v<=hi?v:d};
   return{tiles,hidden:[...new Set((Array.isArray(l.hidden)?l.hidden:[]).filter(x=>TILE_IDS.includes(x)||BAR_IDS.includes(x)))],colors,accent:PALETTE.includes(l.accent)?l.accent:'',
     side:l.side==='left'||l.side==='right'?l.side:'',entry:l.entry==='bottom'?'bottom':'top',sizes,
-    remW:Math.round(num(l.remW,RESIZE.rem[0],RESIZE.rem[1],RESIZE.rem[2])),split:+num(l.split,RESIZE.split[0],RESIZE.split[1],RESIZE.split[2]).toFixed(3)};
+    split:+num(l.split,RESIZE.split[0],RESIZE.split[1],RESIZE.split[2]).toFixed(3)};
 }
-const BLOCK_ELS={hdr:()=>document.querySelector('.hdr'),date:()=>$('todayLabel'),entry:()=>$('entrySheet'),kpis:()=>$('kpis'),rec:()=>document.querySelector('.rec'),rbar:()=>$('remSide'),fbar:()=>$('fbar')};
+const BLOCK_ELS={hdr:()=>document.querySelector('.hdr'),date:()=>$('todayLabel'),entry:()=>$('entrySheet'),kpis:()=>$('kpis'),rec:()=>document.querySelector('.rec'),fbar:()=>$('fbar')};
 const blockEl=id=>BLOCK_ELS[id]?BLOCK_ELS[id]():document.querySelector('.tile[data-tile="'+id+'"]');
 /* readable text colour (white or near-black) for a given background colour */
 function inkFor(hex){
@@ -1281,24 +1236,24 @@ function slideBar(el,show,instant){
     el.animate([{height:h+'px',opacity:1},{height:'0px',paddingBlock:'0px',opacity:0,transform:'translateY(-12px)'}],{duration:M.base,easing:M.ease}).onfinish=()=>{el.classList.add('off');el.style.overflow=''};
   }
 }
-/* the order of the columns: the reminder bar is always on the screen's right edge; dashboard and works list follow the "side" setting */
+/* the order of the columns: dashboard and works list follow the "side" setting */
 function columnOrder(L){
   const swap=L.side?(RTL()?L.side==='right':L.side==='left'):false,a=swap?'rec':'dash',b=swap?'dash':'rec';
-  /* in RTL the first flex item is the rightmost one, in LTR the leftmost one */
-  return RTL()?['rside','remGrip',a,'splitGrip',b]:[a,'splitGrip',b,'remGrip','rside'];
+  /* flex follows the text direction: in Arabic the first item is on the right, in English on the left */
+  return[a,'splitGrip',b];
 }
 function applyLayout(){
   const L=(CFG&&CFG.layout)||normLayout(),app=document.querySelector('.app'),root=document.documentElement,tiles=document.querySelector('.tiles'),body=$('bodyBox');
   if(tiles){const cur=[...tiles.children].map(c=>c.dataset.tile).join();if(cur!==L.tiles.join())L.tiles.forEach(id=>{const el=blockEl(id);if(el)tiles.appendChild(el)})}
   TILE_IDS.forEach(id=>{const el=blockEl(id);if(!el)return;el.hidden=L.hidden.includes(id);const s=L.sizes[id]||[1,1];el.style.gridColumn=s[0]>1?'span '+s[0]:'';el.style.gridRow=s[1]>1?'span '+s[1]:''});
-  /* the entry bar slides away and back; the KPI / filter rows and the reminder bar collapse through animated custom properties */
+  /* the entry bar slides away and back; the KPI and filter rows collapse through animated custom properties */
   const first=!applyLayout.done;applyLayout.done=true;
   slideBar(blockEl('entry'),!L.hidden.includes('entry'),first);
   const dash=document.querySelector('.dash');if(dash){dash.classList.toggle('no-kpis',L.hidden.includes('kpis'));dash.classList.toggle('no-fbar',L.hidden.includes('fbar'))}
   if(body){
-    const remOff=L.hidden.includes('rbar');
-    body.classList.toggle('no-rside',remOff);body.style.setProperty('--rw',(remOff?0:L.remW)+'px');body.style.setProperty('--sp',L.split);
-    const ids={rside:'remSide',remGrip:'remGrip',dash:null,splitGrip:'splitGrip',rec:'recBox'};
+
+    body.style.setProperty('--sp',L.split);
+    const ids={dash:null,splitGrip:'splitGrip',rec:'recBox'};
     columnOrder(L).forEach((k,i)=>{const el=k==='dash'?document.querySelector('.dash'):$(ids[k]);if(el)el.style.order=i});
   }
   BLOCK_IDS.forEach(id=>{const el=blockEl(id);if(!el)return;const c=L.colors[id];if(id==='date'){el.style.color=c?'var(--'+c+')':'';return}if(c){el.dataset.tint='1';el.style.setProperty('--bc','var(--'+c+')')}else{delete el.dataset.tint;el.style.removeProperty('--bc')}});
@@ -1306,7 +1261,7 @@ function applyLayout(){
   else{root.style.removeProperty('--accent');root.style.removeProperty('--accent-soft');root.style.removeProperty('--accent-ink')}
   if(app)app.classList.toggle('entry-bottom',L.entry==='bottom');
 }
-/* ---------- resize: the reminder bar width and the dashboard / works-list split (mouse, touch and keyboard) ---------- */
+/* ---------- resize: the dashboard / works-list split (mouse, touch and keyboard) ---------- */
 function wireGrips(){
   const body=$('bodyBox');if(!body)return;
   const grip=(id,onMove,onKey)=>{
@@ -1320,10 +1275,7 @@ function wireGrips(){
     g.addEventListener('keydown',e=>{const d=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;if(!d)return;e.preventDefault();saveLayout(onKey(d))});
     g.addEventListener('dblclick',()=>saveLayout(onKey(0)));
   };
-  /* reminder bar: it sits on the right, so dragging left makes it wider */
-  let remW=0;const remMove=x=>{const r=$('remSide').getBoundingClientRect();remW=Math.round(Math.max(RESIZE.rem[0],Math.min(RESIZE.rem[1],r.right-x)));body.style.setProperty('--rw',remW+'px')};
-  remMove.result=()=>({remW});
-  grip('remGrip',remMove,d=>({remW:d?CFG.layout.remW-d*16:RESIZE.rem[2]}));
+
   /* split: the dashboard's share of the space next to the works list */
   let split=0;const splitMove=x=>{
     const dr=document.querySelector('.dash').getBoundingClientRect(),rr=$('recBox').getBoundingClientRect(),total=dr.width+rr.width;
@@ -2144,7 +2096,7 @@ setTimeout(()=>appEl.classList.remove('boot'),1800); /* cards rise in once at la
 if(canLock&&LK.get())showLock();
 setLang(LANG,true);
 initNative();
-if(window.__TAURI__&&!/Mac/i.test(navigator.platform))setupShortcuts();applyLayout();applyZoom(curZoom(),false);renderForm();renderAll();dragScroll($('catPick'));bulkWire();wireRemBar();wireGrips();{const h1=document.querySelector('.brand h1');if(h1)h1.addEventListener('click',editTitle)}$('cal').addEventListener('dblclick',e=>{const b=e.target.closest('button[data-k]');if(b&&b.dataset.act==='day')openEvent(null,b.dataset.k)});
+if(window.__TAURI__&&!/Mac/i.test(navigator.platform))setupShortcuts();applyLayout();applyZoom(curZoom(),false);renderForm();renderAll();dragScroll($('catPick'));bulkWire();wireGrips();{const h1=document.querySelector('.brand h1');if(h1)h1.addEventListener('click',editTitle)}$('cal').addEventListener('dblclick',e=>{const b=e.target.closest('button[data-k]');if(b&&b.dataset.act==='day')openEvent(null,b.dataset.k)});
 const slowT=setTimeout(()=>{S.slow=true;renderFbar()},10000);
 initStore().then(store=>{
   S.store=store;syncCfgFromStore(store);evLoad();window.addEventListener('focus',evLoad);

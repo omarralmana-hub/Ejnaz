@@ -916,10 +916,10 @@ html .hdr[data-tint]{background:color-mix(in srgb,var(--bc) 14%,var(--surface))}
 
 /* one-screen desktop layout: columns and tile sizes come from the container, the user's split and the side-bar width */
 @media (min-width:1181px) and (min-height:601px){
-  .body{gap:0;--rg:var(--g);transition:--rw var(--d-slow) var(--ease),--sp var(--d-slow) var(--ease)}
+  .body{gap:0;--rw:0px;--rg:0px;transition:--rw var(--d-slow) var(--ease),--sp var(--d-slow) var(--ease)}
   .resizing .body{transition:none}
   .resizing,.resizing *{cursor:col-resize!important;user-select:none!important}
-  .body.no-rside{--rg:0px}
+  
   .dash{--dw:calc((100cqw - var(--rw) - var(--rg) - var(--g)) * var(--sp));
     --th:calc((100cqh - var(--kh) - var(--fh) - 3*var(--g)) / 2);
     --tw:calc((var(--dw) - 2*var(--g)) / 3);
@@ -932,41 +932,40 @@ html .hdr[data-tint]{background:color-mix(in srgb,var(--bc) 14%,var(--surface))}
 .grip::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:44px;margin:-22px 0 0 -2px;border-radius:999px;background:var(--muted);opacity:0;transition:opacity var(--d-fast) ease,background-color var(--d-fast) ease,height var(--d-base) var(--ease),margin var(--d-base) var(--ease)}
 .body:hover>.grip::after{opacity:.35}
 .grip:hover::after,.grip:focus-visible::after,.grip.on::after{opacity:1;background:var(--accent);height:72px;margin-top:-36px}
-#remGrip{width:var(--rg,var(--g))}
-.body.no-rside #remGrip{pointer-events:none}
 
-/* reminder side bar */
-.rside{flex:none;width:var(--rw,248px);min-width:0;display:flex;flex-direction:column;gap:12px;padding:16px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;transition:opacity var(--d-base) ease,padding var(--d-slow) var(--ease),box-shadow var(--d-base) ease}
-.body.no-rside .rside{opacity:0;padding-inline:0;pointer-events:none;box-shadow:none}
-.rside[data-tint]{background:color-mix(in srgb,var(--bc) 9%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bc) 32%,transparent),var(--shadow)}
-.rside .th{margin:0;height:auto}
-.rside .th h3{margin:0;font-size:var(--fs-m);font-weight:600}
-.rside .th .iconbtn{width:28px;height:28px;font-size:16px}
-.rb-chips{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;scrollbar-width:none}
-.rb-chips::-webkit-scrollbar{display:none}
-.rb-chips>.note{padding:8px 2px}
-.rb-chip{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 8px 8px 10px;border-radius:var(--r-s);background:var(--sunk);cursor:pointer;font-size:var(--fs-s);transition:background-color var(--d-fast) ease,transform var(--d-base) var(--spring)}
-.rb-chip:hover{background:var(--accent-soft);transform:translateY(-1px)}
-.rb-chip i{flex:none;display:grid;place-items:center;color:var(--accent)}.rb-chip.pin i{color:var(--gold)}.rb-chip.dl i{color:var(--danger)}
-.rb-chip b{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rb-chip small{flex:none;color:var(--muted);font-size:var(--fs-xs);white-space:nowrap}.rb-chip.late small{color:var(--danger)}
-.rb-chip .chk{flex:none}
-.rb-add{display:grid;gap:8px;flex:none}
-.rb-row{display:flex;gap:8px}
-.rb-add .in{height:var(--h);font-size:var(--fs-s);width:100%;min-width:0}
-.rb-row .pri{flex:none;width:var(--h);height:var(--h);padding:0;font-size:16px;display:grid;place-items:center}
-.rb-daily{flex:none;width:100%;justify-content:center}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* small screens: one column, no resizing */
 @media (max-width:1180px),(max-height:600px){
   .grip{display:none}
-  .rside{width:auto;max-height:none}
-  .body.no-rside .rside{display:none}
+  
+  
   .tile{grid-column:auto!important;grid-row:auto!important}
 }
 @media (max-width:700px){
-  .app:not([data-tab="list"]) .rside{display:none}
-  .rside{margin-bottom:var(--g)}
+  
+  
 }
 
 /* title editing */
@@ -976,11 +975,10 @@ html .hdr[data-tint]{background:color-mix(in srgb,var(--bc) 14%,var(--surface))}
 .brand h1.editable{cursor:text;border-radius:var(--r-xs);padding:0 4px;margin-inline:-4px;transition:background-color var(--d-fast) ease}
 .brand h1.editable:hover{background:var(--sunk)}
 
-/* customize mode: every editable block gets the SAME rounded dashed ring, drawn inside its own corners,
-   on the rounded element itself (cards, bars, tiles) so neighbours never touch and nothing is clipped */
-.app.cz .tile,.app.cz .kpis,.app.cz .rec,.app.cz .entry,.app.cz .rside,.app.cz .ebar,.app.cz .kpi{animation:none!important;outline:none}
-.app.cz .tile,.app.cz .rec,.app.cz .rside,.app.cz .ebar,.app.cz .kpi{outline:2px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-2px}
-.app.cz .tile,.app.cz .kpis,.app.cz .rec,.app.cz .entry,.app.cz .rside,.app.cz .hdr{pointer-events:none}
+/* customize mode: every editable block gets the SAME rounded dashed ring,drawn inside its own corners,on the rounded element itself (cards,bars,tiles) so neighbours never touch and nothing is clipped */
+.app.cz .tile,.app.cz .kpis,.app.cz .rec,.app.cz .entry,.app.cz .ebar,.app.cz .kpi{animation:none!important;outline:none}
+.app.cz .tile,.app.cz .rec,.app.cz .ebar,.app.cz .kpi{outline:2px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-2px}
+.app.cz .tile,.app.cz .kpis,.app.cz .rec,.app.cz .entry,.app.cz .hdr{pointer-events:none}
 .cz-size{position:absolute;left:0;top:0;width:22px;height:22px;border-radius:var(--r-xs);background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 1px var(--line);cursor:nwse-resize;pointer-events:auto;touch-action:none;display:grid;place-items:center;will-change:transform}
 html[dir="rtl"] .cz-size{cursor:nesw-resize}
 .cz-size::before{content:"";width:8px;height:8px;border-bottom:2px solid var(--muted);border-inline-end:2px solid var(--muted);border-end-end-radius:2px}
@@ -1013,22 +1011,20 @@ html[dir="rtl"] .cz-size{cursor:nesw-resize}
 }
 /* ===== sliding elements that were missing their motion ===== */
 @keyframes slideUpIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
-@keyframes sideIn{from{opacity:0;transform:translateX(28px)}}
+
 @keyframes panelUp{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}
-.rb-chip.in{animation:slideUpIn var(--d-slow) var(--spring) both}
-.rside{animation:sideIn var(--d-spring) var(--spring) both}
+
+
 #czPanel{animation:panelUp var(--d-slow) var(--spring) both}
 /* works-list header: the row height follows its tallest control (the tabs), so the space below it is the normal 12px gap */
 .rh .row1{height:auto;min-height:32px;align-items:center}
 .rec[data-view="notes"] .notes{padding-top:16px}
 @media (max-width:700px){.rh .row1{height:auto;min-height:28px}}
-/* reminder text keeps its own direction, so long English text is cut at its end, not its start */
-.rb-chip b{unicode-bidi:plaintext}
+/* reminder text keeps its own direction,so long English text is cut at its end{unicode-bidi:plaintext}
 /* tile headers grow with their controls (the + button, the mini segment) instead of letting them spill */
 .tile .th{height:auto;min-height:24px}
 
-/* glyph buttons (+) share one size */
-.rb-row .pri,.cpick .cp-add,.rside .th .iconbtn,.cal-plus{font-size:16px;font-weight:400}
+.cpick .cp-add,.cal-plus{font-size:16px;font-weight:400}
 
 /* category picker uses the same sliding thumb as the segmented controls */
 .cpick.has-thumb{position:relative}
@@ -1038,3 +1034,6 @@ html[dir="rtl"] .cz-size{cursor:nesw-resize}
 /* the theme cross-fade must not take away the movement of sliding thumbs and bars */
 .theme-anim .seg-thumb{transition:transform var(--d-slow) var(--spring),width var(--d-slow) var(--spring),height var(--d-base) var(--ease),opacity var(--d-fast) ease,background-color var(--d-spring) ease!important}
 .theme-anim .bulkbar,.theme-anim .dues,.theme-anim .bkbar{transition:grid-template-rows var(--d-slow) var(--ease),opacity var(--d-base) ease,transform var(--d-spring) var(--spring),background-color var(--d-spring) ease!important}
+/* calendar header buttons: list of calendar items, add an item */
+.cal-list{width:24px;height:24px;margin-inline-start:auto}
+.cal-list+.cal-plus{margin-inline-start:4px}
