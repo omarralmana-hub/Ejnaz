@@ -24,7 +24,7 @@
     </div>
     <div class="brand">
       <div class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></div>
-      <div><h1 data-i="app_title">سجل إنجاز عمر المانع</h1><p id="todayLabel" class="num"></p></div>
+      <div><h1 data-i="app_title" data-tt="title_edit" class="editable">سجل إنجاز عمر المانع</h1><p id="todayLabel" class="num"></p></div>
     </div>
     <div class="hmid">
       <div class="seg" role="group" aria-label="الفترة" data-al="period"><button data-act="period" data-p="month" id="pMonth" data-i="monthly">شهري</button><button data-act="period" data-p="year" id="pYear" data-i="yearly">سنوي</button></div>
@@ -66,34 +66,43 @@
 
   <div class="bulkbar gut" id="bulkBar" hidden><div class="bar-in"></div></div>
 
-  <div class="body gut">
+  <div class="body gut" id="bodyBox">
+    <aside class="rside" id="remSide" aria-label="التذكيرات" data-al="rb_title">
+      <div class="th"><h3 data-i="rb_title">التذكيرات</h3><button type="button" class="iconbtn" data-act="cal-add" aria-label="+" data-al="ev_add" data-tt="ev_add">+</button></div>
+      <div class="rb-chips" id="rbChips"></div>
+      <form class="rb-add" id="rbForm" autocomplete="off">
+        <input class="in" id="rbText" maxlength="120" placeholder="تذكير سريع…" data-ph="rb_ph" aria-label="تذكير سريع" data-al="rb_ph">
+        <div class="rb-row"><input type="time" class="in num" id="rbTime" aria-label="الوقت" data-al="ev_time"><button type="submit" class="pri" aria-label="+" data-al="ev_add">+</button></div>
+      </form>
+      <button type="button" class="btn sm rb-daily" data-act="m-remind" data-i="rb_daily">تذكير يومي</button>
+    </aside>
+    <div class="grip" id="remGrip" role="separator" aria-orientation="vertical" tabindex="0" aria-label="تغيير عرض التذكيرات" data-al="rs_resize"></div>
     <section class="dash">
       <div class="fbar" id="fbar"></div>
       <div class="kpis" id="kpis"></div>
       <div class="tiles">
         <div class="tile" data-tile="trend"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
         <div class="tile" data-tile="donut"><div class="th"><h3 data-i="by_cat">حسب التصنيف</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
-        <div class="tile" data-tile="cal"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small><button type="button" class="iconbtn cal-plus" data-act="cal-add" data-al="ev_add" data-tt="ev_add" aria-label="+">+</button></div><div class="tb" id="cal"></div><div class="calup" id="calUp"></div></div>
+        <div class="tile" data-tile="cal"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small><button type="button" class="iconbtn cal-plus" data-act="cal-add" data-al="ev_add" data-tt="ev_add" aria-label="+">+</button></div><div class="tb" id="cal"></div></div>
         <div class="tile" data-tile="acts"><div class="th"><h3 id="actT">نوع الإجراء</h3><div class="seg mini" id="actSeg" role="group"><button type="button" data-act="actview" data-v="actions" aria-pressed="true" data-i="seg_actions">الإجراءات</button><button type="button" data-act="actview" data-v="matters" aria-pressed="false" data-i="seg_matters">الملفات</button></div></div><div class="tb" id="acts"></div></div>
         <div class="tile" data-tile="wd"><div class="th"><h3 data-i="weekdays">أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
         <div class="tile" data-tile="ring"><div class="th"><h3 data-i="completion">نسبة الإنجاز</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>
       </div>
     </section>
-    <section class="rec" aria-label="سجل الأعمال" data-al="log_work">
+    <div class="grip" id="splitGrip" role="separator" aria-orientation="vertical" tabindex="0" aria-label="تغيير عرض سجل الأعمال" data-al="split_resize"></div>
+    <section class="rec" id="recBox" data-view="work" aria-label="سجل الأعمال" data-al="log_work">
       <div class="rh">
-        <div class="row1"><h2 data-i="log_work">سجل الأعمال</h2><span class="cnt num" id="tCnt"></span></div>
+        <div class="row1"><h2 data-i="log_work">سجل الأعمال</h2><span class="cnt num" id="tCnt"></span><div class="seg rtabs" id="recTabs" role="group"><button type="button" data-act="rtab" data-k="work" aria-pressed="true" data-i="log_work">سجل الأعمال</button><button type="button" data-act="rtab" data-k="notes" aria-pressed="false" data-i="notes">الملاحظات</button></div></div>
         <div class="dues" id="dueBar" hidden><div class="bar-in"></div></div>
         <div class="bkbar" id="bkBar" hidden><div class="bar-in"></div></div>
         <div class="row2">
           <input class="search" type="search" id="q" placeholder="بحث بالوصف أو الرقم أو الجهة" data-ph="search_ph" aria-label="بحث" data-al="search_ph">
-          <div class="seg" id="stSeg"><button data-act="st" data-v="" aria-pressed="true" data-i="all">الكل</button><button data-act="st" data-v="progress" aria-pressed="false" data-i="progress">جارٍ</button></div>
+          <div class="seg" id="stSeg"><button data-act="st" data-v="" aria-pressed="true" data-i="all">الكل</button><button data-act="st" data-v="done" aria-pressed="false" data-i="done">منجز</button><button data-act="st" data-v="progress" aria-pressed="false" data-i="progress">جارٍ</button><button data-act="st" data-v="todo" aria-pressed="false" data-i="todo">لم يُنجز</button></div>
           <button class="iconbtn" data-act="sortdir" id="sortBtn" data-tip="الأحدث أولاً" aria-label="ترتيب" data-al="sort_tip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 12h5M14 18h3"/></svg></button>
         </div>
       </div>
       <div class="list" id="list"></div>
-    </section>
-  </div>
-  <section class="notes" id="notesPanel" aria-label="الملاحظات" data-al="notes">
+      <section class="notes" id="notesPanel" aria-label="الملاحظات" data-al="notes">
       <div class="nh"><h2 data-i="notes">الملاحظات</h2><button type="button" class="iconbtn nclose" data-act="notes-close" aria-label="إغلاق" data-al="close">✕</button></div>
       <form class="nbar" id="noteForm" autocomplete="off">
         <textarea class="in" id="noteIn" rows="3" maxlength="3000" placeholder="اكتب ملاحظة…" data-ph="note_ph" aria-label="ملاحظة" data-al="note_ph"></textarea>
@@ -101,7 +110,9 @@
       </form>
       <input class="search" type="search" id="noteQ" placeholder="بحث في الملاحظات" data-ph="note_search" aria-label="بحث في الملاحظات" data-al="note_search">
       <div class="nlist" id="noteList"></div>
-  </section>
+      </section>
+    </section>
+  </div>
 </div>
 
 <div class="nscrim" id="nscrim" data-act="notes-close" hidden></div>
@@ -122,14 +133,12 @@
       <div class="mgroup" data-i="g_view">العرض</div>
       <button data-act="m-month"><span data-i="m_month">العرض الشهري</span><kbd data-k="1"></kbd></button>
       <button data-act="m-year"><span data-i="m_year">العرض السنوي</span><kbd data-k="2"></kbd></button>
-      <button data-act="m-custom"><span data-i="m_custom">تخصيص الواجهة…</span></button>
       <button data-act="m-clear"><span data-i="clear">مسح الفلاتر</span><kbd data-k="⇧K"></kbd></button>
       <button data-act="m-full" class="desk"><span data-i="m_full">ملء الشاشة</span><kbd>F11</kbd></button>
       <div class="mgroup" data-i="g_data">البيانات</div>
       <button data-act="m-setup"><span data-i="m_setup">إعداد القسم…</span></button>
       <button data-act="m-backup"><span data-i="m_backup">النسخ الاحتياطي والمزامنة…</span><kbd data-k="⇧B"></kbd></button>
       <button data-act="m-trash"><span data-i="m_trash">سلة المحذوفات…</span></button>
-      <button data-act="m-remind"><span data-i="m_remind">تذكير يومي…</span></button>
       <button data-act="m-lock-now"><span data-i="m_lock_now">قفل الآن</span><kbd data-k="L"></kbd></button>
       <button data-act="m-lock"><span data-i="m_lock">قفل التطبيق…</span></button>
       <hr>
