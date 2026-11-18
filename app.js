@@ -459,7 +459,11 @@ function openEdit(id){
     if(await safe(()=>S.store.update(id,p),tr('edited')))closeModal()});
   $('eTitle').focus();
 }
-function closeModal(){$('modalRoot').innerHTML=''}
+/* close with a short fade; a dialog opened meanwhile replaces this one, so the timer only removes what is still ours */
+function closeModal(){
+  ddClose(true);const r=$('modalRoot'),ov=r.firstElementChild;if(!ov)return;
+  ov.classList.add('closing');setTimeout(()=>{if(ov.parentNode===r)ov.remove()},170);
+}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();menu.hidden=true;if(!phone.matches)notesOpen(false);sheet(false)}});
 
 /* ---------- export ---------- */
@@ -1008,8 +1012,140 @@ function onMenu(id){
 }
 async function initNative(){
   const T=window.__TAURI__;if(!T||!T.core)return;
-  try{const info=await T.core.invoke('app_info');const r=document.documentElement;r.dataset.platform=info.platform;if(info.vibrancy)r.dataset.vibrant='1';S.dataDir=info.dataDir;renderHeader()}catch(e){}
+  try{const info=await T.core.invoke('app_info');const r=document.documentElement;r.dataset.platform=info.platform;if(info.platform!=='macos'){r.dataset.chrome='custom';setupChrome()}if(info.vibrancy)r.dataset.vibrant='1';S.dataDir=info.dataDir;renderHeader()}catch(e){}
   try{await T.event.listen('menu',ev=>onMenu(ev.payload))}catch(e){}
+}
+
+/* ---------- window chrome (Windows / Linux): Apple-style traffic lights + draggable toolbar ----------
+   tauri.windows.conf.json turns the native title bar off; macOS keeps its own. */
+function setupChrome(){
+  const w=window.__TAURI__.window.getCurrentWindow(),root=document.documentElement,hdr=document.querySelector('.hdr');
+  const btn=k=>$('traffic').querySelector('[data-win="'+k+'"]');
+  btn('close').onclick=()=>w.close();btn('min').onclick=()=>w.minimize();btn('max').onclick=()=>w.toggleMaximize();
+  const sync=async()=>{try{root.classList.toggle('maxed',await w.isMaximized())}catch(e){}};
+  try{w.onResized(sync)}catch(e){}sync();
+  window.addEventListener('focus',()=>root.classList.remove('inactive'));window.addEventListener('blur',()=>root.classList.add('inactive'));
+  hdr.removeAttribute('data-tauri-drag-region'); /* we drive dragging ourselves so every empty part of the toolbar moves the window */
+  hdr.addEventListener('mousedown',ev=>{
+    if(ev.button!==0||ev.target.closest('button,select,input,textarea,a,label,.menu,.skins'))return;
+    if(ev.detail===2)w.toggleMaximize();else w.startDragging();
+  });
+}
+/* thin overlay scrollbars that appear while you scroll, like macOS */
+document.addEventListener('scroll',e=>{const t=e.target===document?document.documentElement:e.target;if(!t||!t.classList)return;t.classList.add('sb-on');clearTimeout(t._sb);t._sb=setTimeout(()=>t.classList.remove('sb-on'),900)},true);
+
+/* ---------- Apple-style dropdowns (mouse devices only; touch devices keep the native picker) ----------
+   The real <select> stays in the page, hidden, as the source of truth: existing code keeps reading .value and listening for "change". */
+const DD={on:matchMedia('(hover:hover) and (pointer:fine)').matches,cur:null};
+function ddEnsure(sel){
+  if(!DD.on||sel.dataset.dd)return;sel.dataset.dd='1';
+  const w=document.createElement('div');w.className='dd '+sel.className;
+  w.innerHTML='<button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg class="dd-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5l3 3 3-3"/></svg></button>';
+  sel.classList.add('dd-native');sel.after(w);
+  const b=w.firstChild;b.addEventListener('click',()=>DD.cur&&DD.cur.sel===sel?ddClose():ddOpen(sel,w));
+  b.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();ddOpen(sel,w)}});
+  ddSync(sel);
+}
+function ddSync(sel){
+  const w=sel.nextElementSibling;if(!w||!w.classList.contains('dd'))return;
+  const o=sel.options[sel.selectedIndex];w.querySelector('.dd-label').textContent=o?o.textContent:'';
+  w.firstChild.setAttribute('aria-label',sel.getAttribute('aria-label')||'');w.classList.toggle('dis',sel.disabled);
+}
+function ddOpen(sel,w){
+  ddClose(true);
+  const all=[...sel.options],pop=document.createElement('div');pop.className='dd-pop';pop.setAttribute('role','listbox');
+  pop.innerHTML=all.map((o,i)=>o.disabled?'':'<div class="dd-item'+(o.selected?' sel hi':'')+'" role="option" aria-selected="'+o.selected+'" data-i="'+i+'"><svg class="dd-chk" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5l2.5 2.5 4.5-5.5"/></svg><span>'+esc(o.textContent)+'</span></div>').join('');
+  document.body.appendChild(pop);
+  const r=w.getBoundingClientRect(),maxH=Math.min(340,innerHeight-24);
+  pop.style.minWidth=Math.max(r.width,168)+'px';pop.style.maxHeight=maxH+'px';
+  const ph=Math.min(pop.scrollHeight,maxH),pw=pop.offsetWidth;
+  let top=r.bottom+6,origin='top';if(top+ph>innerHeight-8&&r.top-ph-6>8){top=r.top-ph-6;origin='bottom'}
+  top=Math.max(8,Math.min(top,innerHeight-ph-8));
+  let left=RTL()?r.right-pw:r.left;left=Math.max(8,Math.min(left,innerWidth-pw-8));
+  pop.style.top=top+'px';pop.style.left=left+'px';pop.style.transformOrigin=origin+(RTL()?' right':' left');
+  DD.cur={sel,w,pop};w.classList.add('open');w.firstChild.setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>pop.classList.add('in'));
+  const s=pop.querySelector('.sel');if(s)s.scrollIntoView({block:'nearest'});
+  pop.addEventListener('mousemove',e=>{const it=e.target.closest('.dd-item');if(it)ddHi(it)});
+  pop.addEventListener('mousedown',e=>e.preventDefault());
+  pop.addEventListener('click',e=>{const it=e.target.closest('.dd-item');if(it)ddPick(+it.dataset.i)});
+}
+function ddHi(it){const c=DD.cur;if(!c)return;c.pop.querySelectorAll('.hi').forEach(x=>x.classList.remove('hi'));it.classList.add('hi');it.scrollIntoView({block:'nearest'})}
+function ddClose(instant){
+  const c=DD.cur;if(!c)return;DD.cur=null;if(!c.ac){c.w.classList.remove('open');c.w.firstChild.setAttribute('aria-expanded','false')}
+  if(instant){c.pop.remove();return}
+  c.pop.classList.remove('in');setTimeout(()=>c.pop.remove(),180);
+}
+/* autocomplete for text fields (title, party, matter): same popover, fed by the <datalist> the app already fills */
+function acEnsure(inp){
+  if(!DD.on||inp.dataset.ac||!inp.getAttribute('list'))return;
+  inp.dataset.ac=inp.getAttribute('list');inp.removeAttribute('list'); /* hides the native list */
+  inp.setAttribute('autocomplete','off');
+  inp.addEventListener('input',()=>acOpen(inp));inp.addEventListener('focus',()=>{if(!inp.value)acOpen(inp)});
+}
+function acOpen(inp){
+  const dl=document.getElementById(inp.dataset.ac);if(!dl)return;
+  const q=inp.value.trim().toLowerCase();
+  const vals=[...dl.options].map(o=>o.value).filter(v=>v&&v.toLowerCase()!==q&&(!q||v.toLowerCase().includes(q))).slice(0,8);
+  if(!vals.length){if(DD.cur&&DD.cur.ac)ddClose();return}
+  ddClose(true);
+  const pop=document.createElement('div');pop.className='dd-pop';pop.setAttribute('role','listbox');
+  pop.innerHTML=vals.map((v,i)=>'<div class="dd-item ac" role="option" data-i="'+i+'"><span>'+esc(v)+'</span></div>').join('');
+  document.body.appendChild(pop);
+  const r=inp.getBoundingClientRect(),pw=Math.max(r.width,220);pop.style.minWidth=pw+'px';pop.style.maxHeight='260px';
+  const ph=Math.min(pop.scrollHeight,260);let top=r.bottom+6,origin='top';if(top+ph>innerHeight-8&&r.top-ph-6>8){top=r.top-ph-6;origin='bottom'}
+  let left=RTL()?r.right-pop.offsetWidth:r.left;left=Math.max(8,Math.min(left,innerWidth-pop.offsetWidth-8));
+  pop.style.top=top+'px';pop.style.left=left+'px';pop.style.transformOrigin=origin+(RTL()?' right':' left');
+  DD.cur={ac:true,inp,w:inp,sel:inp,pop,vals};requestAnimationFrame(()=>pop.classList.add('in'));
+  pop.addEventListener('mousemove',e=>{const it=e.target.closest('.dd-item');if(it)ddHi(it)});
+  pop.addEventListener('mousedown',e=>e.preventDefault());
+  pop.addEventListener('click',e=>{const it=e.target.closest('.dd-item');if(it)ddPick(+it.dataset.i)});
+}
+function ddPick(i){
+  const c=DD.cur;if(!c)return;
+  if(c.ac){const v=c.vals[i];ddClose();if(v!=null){c.inp.value=v;c.inp.dispatchEvent(new Event('input',{bubbles:true}));c.inp.dispatchEvent(new Event('change',{bubbles:true}))}return}
+  const sel=c.sel,changed=sel.selectedIndex!==i,btn=c.w.firstChild;
+  sel.selectedIndex=i;ddSync(sel);ddClose();if(changed)sel.dispatchEvent(new Event('change',{bubbles:true}));
+  try{btn.focus({preventScroll:true})}catch(e){}
+}
+if(DD.on){
+  /* programmatic `select.value = x` (the app does this) must refresh the visible label too */
+  const vd=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value');
+  Object.defineProperty(HTMLSelectElement.prototype,'value',{configurable:true,get(){return vd.get.call(this)},set(v){vd.set.call(this,v);ddSync(this)}});
+  new MutationObserver(ms=>{
+    const touched=new Set();
+    ms.forEach(m=>{
+      if(m.type==='attributes'){if(m.target.tagName==='SELECT')touched.add(m.target);return}
+      m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')ddEnsure(n);else if(n.querySelectorAll){n.querySelectorAll('select').forEach(ddEnsure);n.querySelectorAll('input[list]').forEach(acEnsure)}});
+      const s=m.target.tagName==='SELECT'?m.target:(m.target.closest&&m.target.closest('select'));if(s)touched.add(s);
+    });
+    touched.forEach(ddSync);
+    if(DD.cur&&!document.contains(DD.cur.w))ddClose(true);
+  }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled']});
+  document.addEventListener('mousedown',e=>{const c=DD.cur;if(c&&!c.pop.contains(e.target)&&!c.w.contains(e.target))ddClose()},true);
+  document.addEventListener('scroll',e=>{if(DD.cur&&!DD.cur.pop.contains(e.target))ddClose(true)},true);
+  window.addEventListener('resize',()=>ddClose(true));window.addEventListener('blur',()=>ddClose(true));
+  document.addEventListener('keydown',e=>{
+    const c=DD.cur;if(!c)return;
+    const items=[...c.pop.querySelectorAll('.dd-item')];let i=items.findIndex(x=>x.classList.contains('hi'));
+    if(c.ac){ /* text field: only arrows, Enter on a highlighted item, and Esc are ours; typing passes through */
+      if(e.key==='ArrowDown'||e.key==='ArrowUp'){i=e.key==='ArrowDown'?Math.min(items.length-1,i+1):Math.max(0,i<0?0:i-1);e.preventDefault();e.stopPropagation();if(items[i])ddHi(items[i])}
+      else if(e.key==='Enter'&&i>=0){e.preventDefault();e.stopPropagation();ddPick(+items[i].dataset.i)}
+      else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ddClose()}
+      else if(e.key==='Tab')ddClose();
+      return;
+    }
+    if(e.key==='ArrowDown')i=Math.min(items.length-1,i+1);else if(e.key==='ArrowUp')i=Math.max(0,i-1);
+    else if(e.key==='Home')i=0;else if(e.key==='End')i=items.length-1;
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(items[i])ddPick(+items[i].dataset.i);return}
+    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ddClose();return}
+    else if(e.key==='Tab'){ddClose();return}
+    else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){const k=e.key.toLowerCase(),f=x=>x.textContent.trim().toLowerCase().startsWith(k);const n=items.findIndex((x,j)=>j>i&&f(x)),m=n>=0?n:items.findIndex(f);if(m<0)return;i=m}
+    else return;
+    e.preventDefault();e.stopPropagation();if(items[i])ddHi(items[i]);
+  },true);
+  document.querySelectorAll('select').forEach(ddEnsure);
+  document.querySelectorAll('input[list]').forEach(acEnsure);
 }
 
 /* ---------- boot ---------- */

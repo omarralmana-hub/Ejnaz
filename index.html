@@ -17,6 +17,11 @@
 </head>
 <body><div class="app">
   <header class="hdr gut" data-tauri-drag-region>
+    <div class="traffic" id="traffic" aria-label="Window">
+      <button type="button" class="tl c" data-win="close" aria-label="Close"><svg viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5"/></svg></button>
+      <button type="button" class="tl m" data-win="min" aria-label="Minimize"><svg viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1.2 4h5.6"/></svg></button>
+      <button type="button" class="tl z" data-win="max" aria-label="Zoom"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M1.5 1.5h3.6L1.5 5.1zM6.5 6.5H2.9l3.6-3.6z"/></svg></button>
+    </div>
     <div class="brand">
       <div class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></div>
       <div><h1 data-i="app_title">سجل إنجاز عمر المانع</h1><p id="todayLabel" class="num"></p></div>
