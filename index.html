@@ -52,7 +52,8 @@
       <input class="in p" id="fParty" list="dlParties" maxlength="120" placeholder="الجهة / الطرف" data-ph="party_ph" aria-label="الجهة / الطرف" data-al="party_ph">
       <input class="in d num" type="date" id="fDate" aria-label="التاريخ" data-al="date_l">
       <input class="in h num" type="number" id="fHours" min="0" max="24" step="0.25" placeholder="ساعات" data-ph="hours_ph" aria-label="ساعات" data-al="hours_ph">
-      <div class="seg" id="fStatus" role="group" aria-label="الحالة" data-al="status_l"><button type="button" data-st="done" aria-pressed="true" data-i="done">منجز</button><button type="button" data-st="progress" aria-pressed="false" data-i="progress">جارٍ</button></div>
+      <div class="seg" id="fStatus" role="group" aria-label="الحالة" data-al="status_l"><button type="button" data-st="done" aria-pressed="true" data-i="done">منجز</button><button type="button" data-st="progress" aria-pressed="false" data-i="progress">جارٍ</button><button type="button" data-st="todo" aria-pressed="false" data-i="todo">لم يُنجز</button></div>
+      <button type="button" class="iconbtn" id="bulkBtn" data-act="bulk-toggle" aria-pressed="false" aria-label="قائمة أعمال" data-al="bl_title" data-tip="قائمة أعمال" data-tt="bl_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></button>
       <button type="button" class="iconbtn" id="notesBtn" aria-label="إضافة تفاصيل" data-al="details_l" data-tip="إضافة تفاصيل أو نتيجة" data-tt="details_tip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
       <button class="pri" type="submit" data-i="log">تسجيل</button>
       <div class="notes-row" id="notesRow" hidden>
@@ -64,17 +65,19 @@
     </form>
   </div>
 
+  <div class="bulkbar gut" id="bulkBar" hidden><div class="bar-in"></div></div>
+
   <div class="body gut">
     <section class="dash">
       <div class="fbar" id="fbar"></div>
       <div class="kpis" id="kpis"></div>
       <div class="tiles">
-        <div class="tile"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
-        <div class="tile"><div class="th"><h3 data-i="by_cat">حسب التصنيف</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
-        <div class="tile"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small></div><div class="tb" id="cal"></div></div>
-        <div class="tile"><div class="th"><h3 id="actT">نوع الإجراء</h3><div class="seg mini" id="actSeg" role="group"><button type="button" data-act="actview" data-v="actions" aria-pressed="true" data-i="seg_actions">الإجراءات</button><button type="button" data-act="actview" data-v="matters" aria-pressed="false" data-i="seg_matters">الملفات</button></div></div><div class="tb" id="acts"></div></div>
-        <div class="tile"><div class="th"><h3 data-i="weekdays">أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
-        <div class="tile"><div class="th"><h3 data-i="completion">نسبة الإنجاز</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>
+        <div class="tile" data-tile="trend"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
+        <div class="tile" data-tile="donut"><div class="th"><h3 data-i="by_cat">حسب التصنيف</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
+        <div class="tile" data-tile="cal"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small><button type="button" class="iconbtn cal-plus" data-act="cal-add" data-al="ev_add" data-tt="ev_add" aria-label="+">+</button></div><div class="tb" id="cal"></div><div class="calup" id="calUp"></div></div>
+        <div class="tile" data-tile="acts"><div class="th"><h3 id="actT">نوع الإجراء</h3><div class="seg mini" id="actSeg" role="group"><button type="button" data-act="actview" data-v="actions" aria-pressed="true" data-i="seg_actions">الإجراءات</button><button type="button" data-act="actview" data-v="matters" aria-pressed="false" data-i="seg_matters">الملفات</button></div></div><div class="tb" id="acts"></div></div>
+        <div class="tile" data-tile="wd"><div class="th"><h3 data-i="weekdays">أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
+        <div class="tile" data-tile="ring"><div class="th"><h3 data-i="completion">نسبة الإنجاز</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>
       </div>
     </section>
     <section class="rec" aria-label="سجل الأعمال" data-al="log_work">
@@ -109,6 +112,7 @@
       <div class="mgroup" data-i="g_work">العمل</div>
       <button data-act="m-new"><span data-i="m_new">عمل جديد</span><kbd data-k="N"></kbd></button>
       <button data-act="m-find"><span data-i="m_find">بحث</span><kbd data-k="F"></kbd></button>
+      <button data-act="m-bulk"><span data-i="bl_title">قائمة أعمال</span></button>
       <button data-act="m-notes"><span data-i="notes">الملاحظات</span><kbd data-k="⇧N"></kbd></button>
       <div class="mgroup" data-i="g_reports">التقارير</div>
       <button data-act="m-report"><span data-i="m_report">تنزيل التقرير…</span><kbd data-k="R"></kbd></button>
@@ -118,6 +122,7 @@
       <div class="mgroup" data-i="g_view">العرض</div>
       <button data-act="m-month"><span data-i="m_month">العرض الشهري</span><kbd data-k="1"></kbd></button>
       <button data-act="m-year"><span data-i="m_year">العرض السنوي</span><kbd data-k="2"></kbd></button>
+      <button data-act="m-custom"><span data-i="m_custom">تخصيص الواجهة…</span></button>
       <button data-act="m-clear"><span data-i="clear">مسح الفلاتر</span><kbd data-k="⇧K"></kbd></button>
       <button data-act="m-full" class="desk"><span data-i="m_full">ملء الشاشة</span><kbd>F11</kbd></button>
       <div class="mgroup" data-i="g_data">البيانات</div>
