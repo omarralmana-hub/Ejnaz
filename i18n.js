@@ -92,6 +92,9 @@ ar: {
   lk_pk: 'Face ID / مفتاح المرور', lk_pk_setup: 'إعداد Face ID / مفتاح المرور على هذا الجهاز', lk_pk_remove: 'إزالة', lk_pk_on: 'مفتاح المرور مفعّل على هذا الجهاز',
   lk_pk_unlock: 'فتح بـ Face ID / مفتاح المرور', lk_pk_fail: 'تعذر التحقق بمفتاح المرور، استخدم الرمز',
   lk_pk_help: 'يستخدم Face ID أو Touch ID في هذا الجهاز. يبقى الرمز بديلاً دائماً. المفتاح يبقى على هذا الجهاز ولا يدخل في النسخ الاحتياطية.',
+  lk_px: 'آيفون / آيباد (رمز QR)', lk_px_setup: 'ربط آيفون أو آيباد (امسح رمز QR)', lk_px_on: 'تم ربط مفتاح المرور من الهاتف',
+  lk_px_unlock: 'فتح بآيفون / آيباد (رمز QR)', lk_px_fail: 'تعذر التحقق من الهاتف، استخدم الرمز',
+  lk_px_help: 'سيعرض ويندوز رمز QR: امسحه بكاميرا الآيفون أو الآيباد ووافق بـ Face ID. يلزم Bluetooth واتصال بالإنترنت في الجهازين. يُحفظ المفتاح في سلسلة مفاتيح iCloud ويعمل من أجهزتك الأخرى. الرمز يبقى بديلاً دائماً.',
   /* report options */
   rep_opts: 'خيارات التقرير', rep_cal: 'التقويم', cal_g: 'ميلادي', cal_h: 'هجري', rep_name: 'الاسم', rep_dept: 'الإدارة', rep_jobt: 'المسمى الوظيفي',
   rep_intro: 'مقدمة أو ملخص (اختياري)', rep_cats: 'التصنيفات المضمّنة', rep_matters: 'قسم الملفات (العقود والقضايا)', rep_notes: 'تفاصيل كل عمل',
@@ -186,6 +189,9 @@ en: {
   lk_pk: 'Face ID / passkey', lk_pk_setup: 'Set up Face ID / passkey on this device', lk_pk_remove: 'Remove', lk_pk_on: 'Passkey is set on this device',
   lk_pk_unlock: 'Unlock with Face ID / passkey', lk_pk_fail: 'Could not verify the passkey, use your PIN',
   lk_pk_help: 'Uses Face ID or Touch ID on this device. Your PIN always stays as a fallback. The passkey stays on this device and is not part of backups.',
+  lk_px: 'iPhone / iPad (QR code)', lk_px_setup: 'Link my iPhone or iPad (scan QR)', lk_px_on: 'Phone passkey is linked',
+  lk_px_unlock: 'Unlock with iPhone / iPad (QR)', lk_px_fail: 'Could not verify with the phone, use your PIN',
+  lk_px_help: 'Windows will show a QR code: scan it with your iPhone or iPad camera and approve with Face ID. Bluetooth and an internet connection are needed on both devices. The passkey is saved in iCloud Keychain and works from your other Apple devices. Your PIN always stays as a fallback.',
   /* report options */
   rep_opts: 'Report options', rep_cal: 'Calendar', cal_g: 'Gregorian', cal_h: 'Hijri', rep_name: 'Name', rep_dept: 'Department', rep_jobt: 'Job title',
   rep_intro: 'Introduction or summary (optional)', rep_cats: 'Categories included', rep_matters: 'Matters section (contracts and cases)', rep_notes: 'Each work\'s details',

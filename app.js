@@ -683,15 +683,17 @@ function derToRaw(d){ /* ECDSA signature DER -> r||s (64 bytes) for WebCrypto */
   for(let k=0;k<2;k++){let len=d[i+1],v=d.slice(i+2,i+2+len);i+=2+len;while(v.length>32&&v[0]===0)v=v.slice(1);out.set(v,k*32+32-v.length)}
   return out;
 }
-async function passkeyCreate(){
+/* cross=true: the passkey lives on a PHONE or tablet. Windows shows a QR code, the iPhone / iPad scans it and approves with Face ID
+   (iCloud Keychain syncs that passkey to the user's other Apple devices). cross=false: this device's own Face ID / Touch ID / Windows Hello. */
+async function passkeyCreate(cross){
   const c=await navigator.credentials.create({publicKey:{rp:{name:'Sijil'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'sijil',displayName:'Sijil'},challenge:crypto.getRandomValues(new Uint8Array(32)),
-    pubKeyCredParams:[{type:'public-key',alg:-7}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000,attestation:'none'}});
+    pubKeyCredParams:[{type:'public-key',alg:-7}],authenticatorSelection:{authenticatorAttachment:cross?'cross-platform':'platform',userVerification:'required',residentKey:'preferred'},hints:cross?['hybrid']:undefined,timeout:120000,attestation:'none'}});
   const pub=c.response.getPublicKey?c.response.getPublicKey():null;
   return{id:b64u(c.rawId),pub:pub?b64u(pub):''};
 }
-async function passkeyAssert(pk){
+async function passkeyAssert(pk,cross){
   const ch=crypto.getRandomValues(new Uint8Array(32));
-  const a=await navigator.credentials.get({publicKey:{challenge:ch,allowCredentials:[{type:'public-key',id:unb64u(pk.id),transports:['internal']}],userVerification:'required',timeout:60000}});
+  const a=await navigator.credentials.get({publicKey:{challenge:ch,allowCredentials:[{type:'public-key',id:unb64u(pk.id),transports:cross?['hybrid']:['internal']}],userVerification:'required',hints:cross?['hybrid']:undefined,timeout:120000}});
   const cd=JSON.parse(new TextDecoder().decode(a.response.clientDataJSON));
   if(cd.type!=='webauthn.get'||cd.challenge!==b64u(ch))return false;
   const ad=new Uint8Array(a.response.authenticatorData);
@@ -701,13 +703,15 @@ async function passkeyAssert(pk){
   const h=new Uint8Array(await crypto.subtle.digest('SHA-256',a.response.clientDataJSON)),data=new Uint8Array(ad.length+32);data.set(ad);data.set(h,ad.length);
   return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,derToRaw(new Uint8Array(a.response.signature)),data);
 }
-const pkSection=lk=>pkOk||lk.pk?'<div class="lbl">'+tr('lk_pk')+'<div class="brow">'+(lk.pk?'<span class="path">✓ '+tr('lk_pk_on')+'</span><button type="button" class="btn dan" id="pkRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pkAdd">'+tr('lk_pk_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_pk_help')+'</p>':'';
+const canCross=!!(window.PublicKeyCredential)&&!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent); /* a phone cannot scan its own QR code */
+const pkSection=lk=>(pkOk||lk.pk?'<div class="lbl">'+tr('lk_pk')+'<div class="brow">'+(lk.pk?'<span class="path">✓ '+tr('lk_pk_on')+'</span><button type="button" class="btn dan" id="pkRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pkAdd">'+tr('lk_pk_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_pk_help')+'</p>':'')+
+  (canCross||lk.pkx?'<div class="lbl">'+tr('lk_px')+'<div class="brow">'+(lk.pkx?'<span class="path">✓ '+tr('lk_px_on')+'</span><button type="button" class="btn dan" id="pxRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pxAdd">'+tr('lk_px_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_px_help')+'</p>':'');
 let lockTries=0,lockUntil=0,hiddenAt=0;
 function showLock(){
   const lk=LK.get();if(!lk||$('lockScr'))return;
   const d=document.createElement('div');d.id='lockScr';d.className='lockscr';
   d.innerHTML='<div class="lockbox"><div class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div><h2>'+tr('lk_locked')+'</h2>'+
-    '<input class="in num" id="lkPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+tr('lk_enter')+'" aria-label="'+tr('lk_enter')+'"><button type="button" class="pri" id="lkGo">'+tr('lk_unlock')+'</button>'+(lk.pk?'<button type="button" class="btn" id="lkPk">'+tr('lk_pk_unlock')+'</button>':'')+'<div class="lkmsg" id="lkMsg" role="alert"></div>'+
+    '<input class="in num" id="lkPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+tr('lk_enter')+'" aria-label="'+tr('lk_enter')+'"><button type="button" class="pri" id="lkGo">'+tr('lk_unlock')+'</button>'+(lk.pk?'<button type="button" class="btn" id="lkPk">'+tr('lk_pk_unlock')+'</button>':'')+(lk.pkx?'<button type="button" class="btn" id="lkPx">'+tr('lk_px_unlock')+'</button>':'')+'<div class="lkmsg" id="lkMsg" role="alert"></div>'+
     '<button type="button" class="ghost" id="lkForgot">'+tr('lk_forgot')+'</button><div id="lkRec" hidden><input class="in" id="lkRc" autocomplete="off" placeholder="'+tr('lk_recovery')+'"><button type="button" class="btn" id="lkRs">'+tr('lk_reset')+'</button></div></div>';
   document.body.appendChild(d);
   const msg=t=>{$('lkMsg').textContent=t};
@@ -717,10 +721,9 @@ function showLock(){
     else{lockTries++;$('lkPin').value='';if(lockTries>=5){lockUntil=Date.now()+30000;lockTries=0;msg(tr('lk_wait',30))}else msg(tr('lk_wrong'))}
   };
   $('lkGo').onclick=go;$('lkPin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
-  if(lk.pk){
-    const viaPk=async quiet=>{try{if(await passkeyAssert(lk.pk)){lockTries=0;d.remove()}else if(!quiet)msg(tr('lk_pk_fail'))}catch(e){if(!quiet)msg(tr('lk_pk_fail'))}};
-    $('lkPk').onclick=()=>viaPk(false);setTimeout(()=>viaPk(true),350); /* ask for Face ID right away; the button covers the case where the phone needs a tap first */
-  }
+  const via=async(pk,cross,quiet)=>{try{if(await passkeyAssert(pk,cross)){lockTries=0;d.remove()}else if(!quiet)msg(tr(cross?'lk_px_fail':'lk_pk_fail'))}catch(e){if(!quiet)msg(tr(cross?'lk_px_fail':'lk_pk_fail'))}};
+  if(lk.pk){$('lkPk').onclick=()=>via(lk.pk,false,false);setTimeout(()=>via(lk.pk,false,true),350)} /* ask for Face ID right away; the button covers the case where the phone needs a tap first */
+  if(lk.pkx)$('lkPx').onclick=()=>via(lk.pkx,true,false); /* the phone / QR route always waits for a tap */
   $('lkForgot').onclick=()=>{$('lkRec').hidden=false;$('lkRc').focus()};
   $('lkRs').onclick=async()=>{if(await sha(lk.salt+'rc:'+$('lkRc').value.trim().toLowerCase())===lk.rc){LK.set(null);d.remove();toast(tr('lk_disabled'))}else msg(tr('lk_wrong'))};
   setTimeout(()=>{const p=$('lkPin');if(p)p.focus()},60);
@@ -752,6 +755,8 @@ function openLock(){
     $('lkMins').onchange=()=>{LK.set({...LK.get(),mins:+$('lkMins').value})};
     const pa=$('pkAdd');if(pa)pa.onclick=async()=>{try{const pk=await passkeyCreate();LK.set({...LK.get(),pk});toast(tr('lk_saved'));openLock()}catch(e){$('lkM').textContent=tr('lk_pk_fail')}};
     const pr=$('pkRm');if(pr)pr.onclick=()=>{const l=LK.get();delete l.pk;LK.set(l);openLock()};
+    const px=$('pxAdd');if(px)px.onclick=async()=>{try{const pk=await passkeyCreate(true);LK.set({...LK.get(),pkx:pk});toast(tr('lk_saved'));openLock()}catch(e){$('lkM').textContent=tr('lk_px_fail')}};
+    const pxr=$('pxRm');if(pxr)pxr.onclick=()=>{const l=LK.get();delete l.pkx;LK.set(l);openLock()};
     $('lkOff').onclick=async()=>{if(await verify()){LK.set(null);closeModal();toast(tr('lk_disabled'))}};
     $('lkChg').onclick=async()=>{if(await verify())$('lkNew').hidden=false};
     $('lkSv').onclick=()=>{const a=$('lkN1').value,b=$('lkN2').value;if(!okPin(a)){$('lkM').textContent=tr('lk_bad');return}if(a!==b){$('lkM').textContent=tr('lk_mismatch');return}finish(a,+$('lkMins').value,true)};
