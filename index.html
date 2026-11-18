@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body><div class="app">
+<body><div class="app boot">
   <header class="hdr gut" data-tauri-drag-region>
     <div class="traffic" id="traffic" aria-label="Window">
       <button type="button" class="tl c" data-win="close" aria-label="Close"><svg viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5"/></svg></button>
@@ -34,7 +34,7 @@
     </div>
     <div class="hend">
       <button class="ghost" data-act="ask" id="askBtn" data-i="ask" hidden>اسأل Claude</button>
-      <div class="skins" id="skins" role="group" aria-label="المظهر" data-al="theme"></div>
+      <button class="iconbtn" data-act="lock-now" id="lockBtn" aria-label="قفل الآن" data-al="m_lock_now" data-tip="قفل الآن" data-tt="m_lock_now"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></button>
       <button class="iconbtn" data-act="notes-toggle" id="notesBtnHdr" aria-label="الملاحظات" data-al="notes_tip" data-tip="الملاحظات" data-tt="notes_tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg></button>
       <button class="iconbtn" data-act="m-report" aria-label="تنزيل التقرير" data-al="dl_report" data-tip="تنزيل التقرير" data-tt="dl_report"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button>
       <button class="iconbtn" data-act="menu" aria-label="المزيد" data-al="more" data-tip="تصدير وأدوات" data-tt="more_tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
@@ -80,8 +80,8 @@
     <section class="rec" aria-label="سجل الأعمال" data-al="log_work">
       <div class="rh">
         <div class="row1"><h2 data-i="log_work">سجل الأعمال</h2><span class="cnt num" id="tCnt"></span></div>
-        <div class="dues" id="dueBar" hidden></div>
-        <div class="bkbar" id="bkBar" hidden></div>
+        <div class="dues" id="dueBar" hidden><div class="bar-in"></div></div>
+        <div class="bkbar" id="bkBar" hidden><div class="bar-in"></div></div>
         <div class="row2">
           <input class="search" type="search" id="q" placeholder="بحث بالوصف أو الرقم أو الجهة" data-ph="search_ph" aria-label="بحث" data-al="search_ph">
           <div class="seg" id="stSeg"><button data-act="st" data-v="" aria-pressed="true" data-i="all">الكل</button><button data-act="st" data-v="progress" aria-pressed="false" data-i="progress">جارٍ</button></div>
@@ -105,16 +105,28 @@
 <div class="nscrim" id="nscrim" data-act="notes-close" hidden></div>
     <div class="menu" id="menu" hidden>
       <div class="langrow"><span data-i="lang">اللغة</span><div class="seg" id="langSeg" role="group"><button data-act="lang" data-k="ar" aria-pressed="true">العربية</button><button data-act="lang" data-k="en" aria-pressed="false">English</button></div></div>
-      <hr>
-      <button data-act="m-report" data-i="m_report">حفظ التقرير…</button>
-      <button data-act="m-ai" id="mAi" data-i="m_ai" hidden>صياغة ملخص رسمي للفترة</button>
-      <button data-act="m-csv" data-i="m_csv">تصدير Excel للفترة</button>
-      <button data-act="m-copy" data-i="m_copy">نسخ التقرير كنص</button>
-      <hr>
-      <button data-act="m-backup" data-i="m_backup">النسخ الاحتياطي والمزامنة…</button>
-      <button data-act="m-trash" data-i="m_trash">سلة المحذوفات…</button>
-      <button data-act="m-remind" data-i="m_remind">تذكير يومي…</button>
-      <button data-act="m-lock" data-i="m_lock">قفل التطبيق…</button>
+      <div class="langrow"><span data-i="appearance">المظهر</span><div class="seg" id="themeSeg" role="group"><button data-act="theme" data-k="light" aria-pressed="false" data-i="theme_light">فاتح</button><button data-act="theme" data-k="dark" aria-pressed="false" data-i="theme_dark">داكن</button></div></div>
+      <div class="mgroup" data-i="g_work">العمل</div>
+      <button data-act="m-new"><span data-i="m_new">عمل جديد</span><kbd data-k="N"></kbd></button>
+      <button data-act="m-find"><span data-i="m_find">بحث</span><kbd data-k="F"></kbd></button>
+      <button data-act="m-notes"><span data-i="notes">الملاحظات</span><kbd data-k="⇧N"></kbd></button>
+      <div class="mgroup" data-i="g_reports">التقارير</div>
+      <button data-act="m-report"><span data-i="m_report">تنزيل التقرير…</span><kbd data-k="R"></kbd></button>
+      <button data-act="m-ai" id="mAi" hidden><span data-i="m_ai">صياغة ملخص رسمي للفترة</span></button>
+      <button data-act="m-csv"><span data-i="m_csv">تصدير Excel للفترة</span><kbd data-k="E"></kbd></button>
+      <button data-act="m-copy"><span data-i="m_copy">نسخ التقرير كنص</span><kbd data-k="⇧C"></kbd></button>
+      <div class="mgroup" data-i="g_view">العرض</div>
+      <button data-act="m-month"><span data-i="m_month">العرض الشهري</span><kbd data-k="1"></kbd></button>
+      <button data-act="m-year"><span data-i="m_year">العرض السنوي</span><kbd data-k="2"></kbd></button>
+      <button data-act="m-clear"><span data-i="clear">مسح الفلاتر</span><kbd data-k="⇧K"></kbd></button>
+      <button data-act="m-full" class="desk"><span data-i="m_full">ملء الشاشة</span><kbd>F11</kbd></button>
+      <div class="mgroup" data-i="g_data">البيانات</div>
+      <button data-act="m-setup"><span data-i="m_setup">إعداد القسم…</span></button>
+      <button data-act="m-backup"><span data-i="m_backup">النسخ الاحتياطي والمزامنة…</span><kbd data-k="⇧B"></kbd></button>
+      <button data-act="m-trash"><span data-i="m_trash">سلة المحذوفات…</span></button>
+      <button data-act="m-remind"><span data-i="m_remind">تذكير يومي…</span></button>
+      <button data-act="m-lock-now"><span data-i="m_lock_now">قفل الآن</span><kbd data-k="L"></kbd></button>
+      <button data-act="m-lock"><span data-i="m_lock">قفل التطبيق…</span></button>
       <hr>
       <div class="note" id="storeNote"></div>
     </div>
@@ -131,6 +143,7 @@
 <div id="toastRoot"></div>
 <div id="printRoot" aria-hidden="true"></div>
 <script src="i18n.js"></script>
+<script src="presets.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

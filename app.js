@@ -1,14 +1,7 @@
 (function(){
 "use strict";
-const CATS={
-  'عقود':{color:'var(--c1)',ref:'رقم العقد',actions:['مراجعة عقد','صياغة عقد','ملحق / تعديل','تجديد / تمديد','مقارنة نسخ','إبداء رأي']},
-  'خطابات':{color:'var(--c3)',ref:'رقم الخطاب',actions:['خطاب صادر','رد على خطاب','إنذار / إخطار','مذكرة داخلية']},
-  'تحقيقات':{color:'var(--c4)',ref:'رقم القضية',actions:['فتح تحقيق','جلسة تحقيق','محضر تحقيق','توصية / قرار','متابعة تحقيق']},
-  'أخرى':{color:'var(--c8)',ref:'المرجع',actions:['اجتماع','استشارة','متابعة','أخرى']}
-};
-const CN=Object.keys(CATS);
-let OWNER;
-const SKINS=[['auto','تلقائي','linear-gradient(135deg,#F5F5F7 50%,#1C1C1E 50%)'],['light','فاتح','#F5F5F7'],['dark','داكن','#1C1C1E'],['sand','رملي','linear-gradient(135deg,#F3EEE5 50%,#A0723E 50%)'],['sage','زيتي','linear-gradient(135deg,#EDF1EA 50%,#4E8360 50%)'],['midnight','ليلي','linear-gradient(135deg,#141B2F 50%,#7D9BFF 50%)']];
+/* categories, actions, KPI squares and names come from the department setup (CFG, see "department workspace" below) */
+let CATS={},CN=[],CATN={},ACTN={},DEFCAT='أخرى',CFG=null,OWNER;
 let L,fFull,fDay,fShort,fHijri,MONTHS,WD,WDL;
 /* date formats and month/weekday names are built per language in setupLocale() */
 
@@ -26,7 +19,7 @@ const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const hijri=s=>{try{return fHijri?fHijri.format(parse(s)):''}catch(e){return ''}};
 const hrs=n=>(Math.round(n*100)/100).toString();
 const today=()=>ymd(new Date());
-const catOf=e=>e.category||'أخرى';
+const catOf=e=>e.category||DEFCAT;
 const stOf=e=>e.status==='progress'?'progress':'done';
 function catColor(c){if(CATS[c])return CATS[c].color;let h=0;for(const ch of String(c))h=(h*31+ch.charCodeAt(0))>>>0;return 'var(--'+['c2','c5','c6','c7'][h%4]+')'}
 function actionCat(a){for(const c of CN)if(CATS[c].actions.includes(a))return c;return null}
@@ -42,10 +35,8 @@ let LANG=lsGet('sijil.lang')==='en'?'en':'ar';
 const RTL=()=>LANG==='ar';
 const tr=(k,...a)=>{let s=(I18N[LANG]&&I18N[LANG][k])??(I18N.ar&&I18N.ar[k])??k;a.forEach((v,i)=>{s=s.split('{'+i+'}').join(v)});return s};
 /* records keep Arabic category/action names; English is display only */
-const CAT_EN={'عقود':'Contracts','خطابات':'Letters','تحقيقات':'Investigations','أخرى':'Other'};
-const ACT_EN={'مراجعة عقد':'Contract review','صياغة عقد':'Contract drafting','ملحق / تعديل':'Addendum / amendment','تجديد / تمديد':'Renewal / extension','مقارنة نسخ':'Version comparison','إبداء رأي':'Legal opinion','خطاب صادر':'Outgoing letter','رد على خطاب':'Reply to letter','إنذار / إخطار':'Warning / notice','مذكرة داخلية':'Internal memo','فتح تحقيق':'Open investigation','جلسة تحقيق':'Investigation session','محضر تحقيق':'Investigation minutes','توصية / قرار':'Recommendation / decision','متابعة تحقيق':'Investigation follow-up','اجتماع':'Meeting','استشارة':'Consultation','متابعة':'Follow-up','أخرى':'Other'};
-const catL=c=>LANG==='en'?(CAT_EN[c]||c):c;
-const actL=a=>LANG==='en'?(ACT_EN[a]||a):a;
+const catL=c=>{const n=CATN[c];return n?(n[LANG]||n.ar||n.en||c):c};
+const actL=a=>{const n=ACTN[a];return n?(n[LANG]||n.ar||n.en||a):a};
 function setupLocale(){
   L=RTL()?'ar-SA-u-ca-gregory-nu-latn':'en-US-u-ca-gregory';
   fFull=new Intl.DateTimeFormat(L,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -56,13 +47,13 @@ function setupLocale(){
   const wk=n=>Array.from({length:7},(_,i)=>new Intl.DateTimeFormat(L,{weekday:n}).format(new Date(2026,10,15+i)));
   WDL=RTL()?['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']:wk('long');
   WD=RTL()?['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت']:wk('short');
-  OWNER=tr('owner');
+  OWNER=ownerName();
 }
 setupLocale();
 /* static text in index.html: data-i = text, data-ph = placeholder, data-al = aria-label, data-tt = hover tip */
 function applyStatic(){
-  const r=document.documentElement;r.lang=LANG;r.dir=RTL()?'rtl':'ltr';document.title=tr('app_title');
-  document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=tr(e.dataset.i)});
+  const r=document.documentElement;r.lang=LANG;r.dir=RTL()?'rtl':'ltr';document.title=appTitle();
+  document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=e.dataset.i==='app_title'?appTitle():tr(e.dataset.i)});
   document.querySelectorAll('[data-ph]').forEach(e=>{e.placeholder=tr(e.dataset.ph)});
   document.querySelectorAll('[data-al]').forEach(e=>{e.setAttribute('aria-label',tr(e.dataset.al))});
   document.querySelectorAll('[data-tt]').forEach(e=>{e.setAttribute('data-tip',tr(e.dataset.tt))});
@@ -74,17 +65,175 @@ function setLang(l,boot){
   try{const T=window.__TAURI__;if(T&&T.core&&(!boot||LANG!=='ar'))T.core.invoke('set_language',{lang:LANG}).catch(()=>{})}catch(e){}
 }
 
+/* ---------- department workspace: categories, actions, KPI squares and names are editable (presets in presets.js) ---------- */
+const PRESETS=window.SIJIL_PRESETS||{};
+const PALETTE=['c1','c2','c3','c4','c5','c6','c7','c8'];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const actVal=a=>a.ar||a.en||'';
+function presetCfg(id,keepPerson){
+  const p=PRESETS[id]||PRESETS.legal;
+  return{v:1,preset:id,edited:false,dept:clone(p.name),person:keepPerson||{ar:(I18N.ar&&I18N.ar.owner)||'',en:(I18N.en&&I18N.en.owner)||''},cats:clone(p.cats),kpis:clone(p.kpis)};
+}
+/* accept only well-formed setups (a template file or the data file can come from anywhere) */
+function normalizeCfg(c){
+  try{
+    if(!c||!Array.isArray(c.cats)||!c.cats.length)return null;
+    const seen=new Set(),str=(v,n)=>String(v==null?'':v).slice(0,n),nm=o=>({ar:str(o&&o.ar,60),en:str(o&&o.en,60)});
+    const cats=c.cats.slice(0,24).map(x=>{
+      let id=str(x&&x.id,40).trim();if(!id||seen.has(id))id='c'+Math.random().toString(36).slice(2,7);seen.add(id);
+      const acts=(Array.isArray(x.acts)?x.acts:[]).slice(0,30).map(a=>nm(a)).filter(a=>a.ar||a.en);
+      return{id,name:nm(x.name),color:PALETTE.includes(x.color)?x.color:'c1',ref:nm(x.ref),other:!!x.other,acts};
+    }).filter(x=>x.name.ar||x.name.en);
+    if(!cats.length)return null;
+    if(!cats.some(x=>x.other))cats[cats.length-1].other=true;
+    const ok=k=>k&&(['total','done','open','overdue','rate','days','hours'].includes(k.t)||(k.t==='cat'&&seen.has(k.id)));
+    let kpis=(Array.isArray(c.kpis)?c.kpis:[]).filter(ok).slice(0,6).map(k=>k.t==='cat'?{t:'cat',id:k.id}:{t:k.t});
+    if(!kpis.length)kpis=[{t:'total'}];
+    const pr=c.person||{};
+    return{v:1,preset:str(c.preset,20)||'custom',edited:!!c.edited,dept:nm(c.dept),person:{ar:str(pr.ar,60),en:str(pr.en,60)},cats,kpis};
+  }catch(e){return null}
+}
+function loadCfg(){
+  try{const t=lsGet('sijil.cfg');if(t){const n=normalizeCfg(JSON.parse(t));if(n)return n}}catch(e){}
+  return presetCfg('legal');
+}
+function applyConfig(){
+  CATS={};CN=[];CATN={};ACTN={};
+  CFG.cats.forEach(c=>{CN.push(c.id);CATN[c.id]=c.name;CATS[c.id]={color:'var(--'+c.color+')',actions:c.acts.map(actVal)};c.acts.forEach(a=>{ACTN[actVal(a)]=a})});
+  const o=CFG.cats.find(c=>c.other)||CFG.cats[CFG.cats.length-1];DEFCAT=o?o.id:'أخرى';
+  OWNER=ownerName();
+}
+function ownerName(){const p=CFG&&CFG.person;return(p&&(p[LANG]||p.ar||p.en))||tr('owner')}
+function appTitle(){return LANG==='ar'?'سجل إنجاز '+OWNER:OWNER+' · Work Log'}
+function colorOf(id){return CATS[id]?CATS[id].color:catColor(id)}
+function refLabel(id){const c=CFG&&CFG.cats.find(x=>x.id===id),r=c&&c.ref;return(r&&(r[LANG]||r.ar||r.en))||tr('ref_f')}
+function deptName(){const d=CFG&&CFG.dept;return(d&&(d[LANG]||d.ar||d.en))||''}
+function initWorkspace(){CFG=loadCfg();applyConfig()}
+function refreshAfterCfg(){
+  if(!CATS[S.form.cat]){const last=lsGet('sijil.lastCat');S.form.cat=CATS[last]?last:CN[0]}
+  if(S.f.cat&&!CATS[S.f.cat])S.f.cat=null;
+  setupLocale();applyStatic();renderForm();renderAll();
+}
+async function saveCfg(c){
+  CFG=c;lsSet('sijil.cfg',JSON.stringify(c));
+  try{if(S.store&&S.store.config)await S.store.config.set(c)}catch(e){}
+  applyConfig();refreshAfterCfg();
+}
+/* the data file (or another device's file) may hold a newer setup than this browser's cache */
+async function syncCfgFromStore(store){
+  try{
+    const c=await store.config.get(),n=c&&normalizeCfg(c);
+    if(n){if(JSON.stringify(n)!==JSON.stringify(CFG)){CFG=n;lsSet('sijil.cfg',JSON.stringify(n));applyConfig();refreshAfterCfg()}}
+    else await store.config.set(CFG);
+  }catch(e){}
+}
+
+/* ----- the setup dialog ----- */
+let W=null; /* the draft being edited */
+const kpiLabel=k=>k.t==='cat'?catLw(k.id):tr({total:'k_total',done:'done',open:'progress',overdue:'due_over',rate:'completion',days:'k_days',hours:'k_hours'}[k.t]);
+const catLw=id=>{const c=W&&W.cats.find(x=>x.id===id);return c?(c.name[LANG]||c.name.ar||c.name.en||id):id};
+function wsId(c){
+  const base=(c.name.en||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  let id=base?'c-'+base:'c-'+Math.random().toString(36).slice(2,7);while(W.cats.some(x=>x.id===id))id+=Math.random().toString(36).slice(2,4);return id;
+}
+function openSetup(){W=clone(CFG);setupDraw()}
+function setupDraw(){
+  const sc=document.querySelector('.setup');const top=sc?sc.scrollTop:0;
+  const f=(path,ph,v,cls)=>'<input class="in '+(cls||'')+'" data-p="'+path+'" value="'+esc(v||'')+'" placeholder="'+esc(ph)+'" maxlength="60">';
+  const sw=(ci,cur)=>PALETTE.map(p=>'<button type="button" class="swatch" data-ci="'+ci+'" data-color="'+p+'" aria-pressed="'+(p===cur)+'" style="background:var(--'+p+')" aria-label="'+p+'"></button>').join('');
+  const cards=W.cats.map((c,ci)=>
+    '<div class="cc" data-ci="'+ci+'"><div class="cc-h"><div class="swatches">'+sw(ci,c.color)+'</div><div class="cc-btns">'+
+      '<button type="button" class="nb" data-s="up" data-ci="'+ci+'" aria-label="'+tr('mv_up')+'"'+(ci?'':' disabled')+'>↑</button><button type="button" class="nb" data-s="down" data-ci="'+ci+'" aria-label="'+tr('mv_down')+'"'+(ci<W.cats.length-1?'':' disabled')+'>↓</button>'+
+      (c.other?'<span class="oth">'+tr('cat_other')+'</span>':'<button type="button" class="nb dan" data-s="delcat" data-ci="'+ci+'" aria-label="'+tr('del')+'">'+ICON.del+'</button>')+'</div></div>'+
+      '<div class="g2">'+f('cats.'+ci+'.name.ar',tr('name_ar'),c.name.ar)+f('cats.'+ci+'.name.en',tr('name_en'),c.name.en)+'</div>'+
+      '<div class="g2">'+f('cats.'+ci+'.ref.ar',tr('ref_ar'),c.ref.ar)+f('cats.'+ci+'.ref.en',tr('ref_en'),c.ref.en)+'</div>'+
+      '<div class="acts-h">'+tr('cat_actions')+'</div>'+
+      c.acts.map((a,ai)=>'<div class="g2x">'+f('cats.'+ci+'.acts.'+ai+'.ar',tr('name_ar'),a.ar)+f('cats.'+ci+'.acts.'+ai+'.en',tr('name_en'),a.en)+'<button type="button" class="nb dan" data-s="delact" data-ci="'+ci+'" data-ai="'+ai+'" aria-label="'+tr('del')+'">✕</button></div>').join('')+
+      '<button type="button" class="btn sm" data-s="addact" data-ci="'+ci+'">+ '+tr('act_add')+'</button></div>').join('');
+  const opts=['__none',...['total','done','open','overdue','rate','days','hours'],...W.cats.map(c=>'cat:'+c.id)];
+  const slots=Array.from({length:6},(_,i)=>{const k=W.kpis[i],cur=k?(k.t==='cat'?'cat:'+k.id:k.t):'__none';
+    return '<label class="lbl">'+tr('kpi_slot',i+1)+'<select class="in" data-kpi="'+i+'">'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o==='__none'?tr('kpi_none'):kpiLabel(o.startsWith('cat:')?{t:'cat',id:o.slice(4)}:{t:o}))+'</option>').join('')+'</select></label>'}).join('');
+  const presetOpts=Object.keys(PRESETS).map(k=>'<option value="'+k+'">'+esc(PRESETS[k].name[LANG]||PRESETS[k].name.ar)+'</option>').join('');
+  dlg(tr('setup_title'),'<div class="setup">'+
+    '<section><h4>'+tr('setup_who')+'</h4><div class="g2">'+f('dept.ar',tr('dept_ar'),W.dept.ar)+f('dept.en',tr('dept_en'),W.dept.en)+'</div><div class="g2">'+f('person.ar',tr('person_ar'),W.person.ar)+f('person.en',tr('person_en'),W.person.en)+'</div></section>'+
+    '<section><h4>'+tr('setup_tpl')+'</h4><p class="note">'+tr('setup_tpl_help')+'</p><div class="frow"><select class="in" id="wsPreset">'+presetOpts+'</select><button type="button" class="btn" data-s="preset">'+tr('tpl_load')+'</button></div>'+
+      '<div class="brow"><button type="button" class="btn" data-s="export">'+tr('tpl_export')+'</button><button type="button" class="btn" data-s="import">'+tr('tpl_import')+'</button></div></section>'+
+    '<section><h4>'+tr('cats_h')+'</h4><p class="note">'+tr('cats_help')+'</p>'+cards+'<button type="button" class="btn" data-s="addcat">+ '+tr('cat_add')+'</button></section>'+
+    '<section><h4>'+tr('kpi_h')+'</h4><p class="note">'+tr('kpi_help')+'</p><div class="g3">'+slots+'</div></section></div>'+
+    '<div class="mfoot"><span class="note" id="wsMsg"></span><span style="display:flex;gap:8px"><button type="button" class="btn" data-act="close">'+tr('cancel')+'</button><button type="button" class="pri" id="wsSave">'+tr('save')+'</button></span></div>','setupDlg');
+  const root=$('setupDlg');root.classList.add('wide');
+  const sc2=root.querySelector('.setup');sc2.scrollTop=top;
+  const setPath=(path,v)=>{const ps=path.split('.');let o=W;for(let i=0;i<ps.length-1;i++)o=o[ps[i]];o[ps[ps.length-1]]=v};
+  root.querySelectorAll('input[data-p]').forEach(i=>i.oninput=()=>setPath(i.dataset.p,i.value));
+  root.querySelectorAll('select[data-kpi]').forEach(s=>s.onchange=()=>{
+    const i=+s.dataset.kpi,v=s.value;const slotsNow=Array.from({length:6},(_,j)=>W.kpis[j]||null);
+    slotsNow[i]=v==='__none'?null:(v.startsWith('cat:')?{t:'cat',id:v.slice(4)}:{t:v});W.kpis=slotsNow.filter(Boolean)});
+  root.onclick=ev=>{
+    const b=ev.target.closest('[data-s],.swatch');if(!b)return;
+    if(b.classList.contains('swatch')){W.cats[+b.dataset.ci].color=b.dataset.color;setupDraw();return}
+    const s=b.dataset.s,ci=+b.dataset.ci,ai=+b.dataset.ai;
+    if(s==='up'&&ci>0){[W.cats[ci-1],W.cats[ci]]=[W.cats[ci],W.cats[ci-1]]}
+    else if(s==='down'&&ci<W.cats.length-1){[W.cats[ci+1],W.cats[ci]]=[W.cats[ci],W.cats[ci+1]]}
+    else if(s==='delcat'){const c=W.cats[ci];W.cats.splice(ci,1);W.kpis=W.kpis.filter(k=>!(k.t==='cat'&&k.id===c.id))}
+    else if(s==='addcat'){const c={id:'',name:{ar:'',en:''},color:PALETTE[W.cats.length%7],ref:{ar:'',en:''},other:false,acts:[]};c.id='c-'+Math.random().toString(36).slice(2,7);W.cats.splice(Math.max(0,W.cats.length-1),0,c)}
+    else if(s==='addact'){W.cats[ci].acts.push({ar:'',en:''})}
+    else if(s==='delact'){W.cats[ci].acts.splice(ai,1)}
+    else if(s==='preset'){const id=$('wsPreset').value,p=presetCfg(id,W.person);W.cats=p.cats;W.kpis=p.kpis;W.dept=p.dept;W.preset=id}
+    else if(s==='export')return exportTemplate();
+    else if(s==='import')return importTemplate();
+    setupDraw();
+  };
+  $('wsSave').onclick=saveSetup;
+}
+async function saveSetup(){
+  /* give every new category a stable id from its English name, drop empty rows */
+  W.cats.forEach(c=>{if(/^c-[a-z0-9]{5}$/.test(c.id)&&(c.name.en||'').trim()){const nid=wsId(c);W.kpis.forEach(k=>{if(k.t==='cat'&&k.id===c.id)k.id=nid});c.id=nid}c.acts=c.acts.filter(a=>(a.ar||'').trim()||(a.en||'').trim())});
+  W.cats=W.cats.filter(c=>(c.name.ar||'').trim()||(c.name.en||'').trim());
+  const n=normalizeCfg(W);if(!n){$('wsMsg').textContent=tr('setup_need_cat');return}
+  n.edited=true;n.preset=W.preset||CFG.preset;
+  /* records whose category was removed move to the "other" category, so nothing is left unclassified */
+  const keep=new Set(n.cats.map(c=>c.id)),dflt=(n.cats.find(c=>c.other)||n.cats[n.cats.length-1]).id;
+  const orphans=S.all.filter(e=>e.category&&!keep.has(e.category)&&CATS[e.category]);
+  await saveCfg(n);
+  let moved=0;for(const e of orphans){try{await S.store.update(e.id,{category:dflt,updatedAt:Date.now()});moved++}catch(err){break}}
+  closeModal();toast(moved?tr('setup_saved_moved',moved):tr('setup_saved'));
+}
+function exportTemplate(){
+  const slug=((W.dept.en||W.dept.ar||'department').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))||'department';
+  saveFile('Sijil-template-'+slug+'.json',JSON.stringify({app:'sijil-department',version:1,config:W},null,1));
+}
+function importTemplate(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=async()=>{const f=inp.files[0];if(!f)return;
+    try{const d=JSON.parse(await f.text()),n=normalizeCfg(d.config||d);if(!n)throw 0;W.cats=n.cats;W.kpis=n.kpis;W.dept=n.dept;W.preset='custom';setupDraw()}catch(e){toast(tr('tpl_bad'))}};
+  inp.click();
+}
+
+
+initWorkspace();
+
 const S={entries:[],loaded:false,store:null,slow:false,
   year:new Date().getFullYear(),period:'month',rmonth:new Date().getMonth()+1,
   f:{cat:null,action:null,day:null,status:null,matter:null,due:null},q:'',asc:false,limit:80,
   all:[],trash:[],notes:[],noteEdit:null,noteDel:null,noteQ:'',trashDel:null,actView:'actions',
-  form:{cat:CATS[lsGet('sijil.lastCat')]?lsGet('sijil.lastCat'):'عقود',status:'done'},summary:null,skin:lsGet('sijil.skin')||'auto'};
+  form:{cat:CATS[lsGet('sijil.lastCat')]?lsGet('sijil.lastCat'):CN[0],status:'done'},summary:null,skin:initialTheme()};
 
 /* ---------- theme ---------- */
-function applySkin(){const r=document.documentElement;if(S.skin==='auto')r.removeAttribute('data-skin');else r.setAttribute('data-skin',S.skin);
-  $('skins').innerHTML=SKINS.map(([k,l,bg])=>'<button class="sw" data-act="skin" data-k="'+k+'" aria-pressed="'+(S.skin===k)+'" aria-label="'+tr('skin_'+k)+'" data-tip="'+tr('skin_'+k)+'" style="background:'+bg+'"></button>').join('')}
+/* two themes only: Light and Dark. First run follows the system; after that it is whatever was chosen in the â‹¯ menu. */
+function initialTheme(){
+  const t=lsGet('sijil.theme');if(t==='dark'||t==='light')return t;
+  const old=lsGet('sijil.skin');if(old==='dark'||old==='midnight')return 'dark';if(old==='light'||old==='sand'||old==='sage')return 'light';
+  return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function applySkin(){
+  const r=document.documentElement;
+  if(applySkin.done){r.classList.add('theme-anim');clearTimeout(applySkin.t);applySkin.t=setTimeout(()=>r.classList.remove('theme-anim'),700)}applySkin.done=true; /* colours cross-fade */
+  r.setAttribute('data-theme',S.skin);r.style.colorScheme=S.skin;
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=S.skin==='dark'?'#000000':'#f5f5f7';
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===S.skin));
+}
+const toggleTheme=()=>{S.skin=S.skin==='dark'?'light':'dark';lsSet('sijil.theme',S.skin);applySkin()};
 applySkin();
-
 /* ---------- storage ---------- */
 function notesLocal(){
   const K='sijil.notes.v1';let subs=[];
@@ -107,6 +256,7 @@ function localStore(){
     async add(e){const o=read();o.entries=o.entries||{};const id='e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);o.entries[id]=e;write(o);emit();return{id}},
     async update(id,p){const o=read();if(o.entries[id]){o.entries[id]={...o.entries[id],...p};write(o);emit()}},
     async remove(id){const o=read();delete o.entries[id];write(o);emit()},
+    config:{async get(){try{return JSON.parse(lsGet('sijil.cfg'))}catch(e){return null}},async set(c){lsSet('sijil.cfg',JSON.stringify(c))}},
     notes:notesLocal()};
 }
 function notesDb(db){const c=db.collection('notes');return{subscribe(cb){return c.onSnapshot(s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))))},add:n=>c.add(n),update:(id,p)=>c.doc(id).update(p),remove:id=>c.doc(id).delete()}}
@@ -115,7 +265,8 @@ function dbStore(db){
   const col=db.collection('worklog');
   return{kind:'db',col,
     subscribe(cb,err){return col.onSnapshot(s=>cb(s.docs.map(d=>({id:d.id,...d.data()})),s.metadata),err)},
-    add(e){return col.add(e)},update(id,p){return col.doc(id).update(p)},remove(id){return col.doc(id).delete()},notes:notesDb(db)};
+    add(e){return col.add(e)},update(id,p){return col.doc(id).update(p)},remove(id){return col.doc(id).delete()},notes:notesDb(db),
+    config:{async get(){const d=await db.doc('settings/workspace').get();return(typeof d.exists==='function'?d.exists():d.exists)?d.data():null},set:c=>db.doc('settings/workspace').set(c)}};
 }
 /* one-time move from the old private path: copy each record, then remove the old copy */
 async function migrateOld(db,uid,col){
@@ -136,6 +287,7 @@ function tauriStore(){
     add:entry=>run('add_entry',{entry}),
     update:(id,patch)=>run('update_entry',{id,patch}),
     remove:id=>run('delete_entry',{id}),
+    config:{get:()=>invoke('get_config'),set:config=>invoke('set_config',{config})},
     notes:{subscribe(cb){nsubs.push(cb);pullN()},add:note=>run('add_note',{note}),update:(id,patch)=>run('update_note',{id,patch}),remove:id=>run('delete_note',{id})}};
 }
 /* Web / iPhone install: offline cache + ask the browser not to evict the saved records */
@@ -156,7 +308,7 @@ function errMsg(e){const c=e&&e.code;
   if(c==='resource_exhausted')return tr('err_rate');
   return tr('err_save')}
 async function safe(fn,ok){try{await fn();if(ok)toast(ok);return true}catch(e){toast(errMsg(e));return false}}
-function toast(msg,label,fn){const r=$('toastRoot');r.innerHTML='<div class="toast fade" role="status"><span>'+esc(msg)+'</span>'+(label?'<button type="button" class="toast-act" data-act="toast-act">'+esc(label)+'</button>':'')+'</div>';toast.fn=fn||null;clearTimeout(toast.t);toast.t=setTimeout(()=>{r.innerHTML='';toast.fn=null},label?8000:2600)}
+function toast(msg,label,fn){const r=$('toastRoot');r.innerHTML='<div class="toast fade" role="status"><span>'+esc(msg)+'</span>'+(label?'<button type="button" class="toast-act" data-act="toast-act">'+esc(label)+'</button>':'')+'</div>';toast.fn=fn||null;clearTimeout(toast.t);toast.t=setTimeout(()=>{const t=r.firstElementChild;if(t)t.classList.add('out');setTimeout(()=>{if(r.firstElementChild===t)r.innerHTML=''},280);toast.fn=null},label?8000:2600)}
 
 /* ---------- filtering ---------- */
 const periodLabel=()=>S.period==='year'?tr('year_word')+' '+S.year:MONTHS[S.rmonth-1]+' '+S.year;
@@ -267,10 +419,20 @@ function renderKPIs(){
   const cc=countBy(bc,catOf),ct=bc.length||1,days=new Set(all.map(e=>e.date)).size,h=all.reduce((a,e)=>a+(+e.hours||0),0);
   const card=o=>'<'+(o.act?'button':'div')+' class="kpi"'+(o.act?' data-act="'+o.act+'" data-k="'+esc(o.k)+'" aria-pressed="'+!!o.on+'"':'')+' style="--k:'+o.c+'"'+(o.tip?' data-tip="'+esc(o.tip)+'"':'')+'><span class="kl"><i></i>'+o.l+'</span><b>'+o.v+'</b><span class="kf">'+o.f+'</span></'+(o.act?'button':'div')+'>';
   let s=card({l:tr('k_total'),v:n,c:'var(--accent)',f:delta===null?'—':'<span class="'+(delta>=0?'up':'down')+'">'+(delta>=0?'▲':'▼')+' '+Math.abs(delta)+'%</span> '+tr('vs')+' '+pl,tip:periodLabel()});
-  ['عقود','خطابات','تحقيقات'].forEach(c=>{const v=cc[c]||0;s+=card({act:'cat',k:c,on:S.f.cat===c,l:catL(c),v,c:CATS[c].color,f:Math.round(v/ct*100)+'% '+tr('of_work'),tip:tr('show_only',catL(c))})});
-  s+=card({l:tr('k_days'),v:days,c:'var(--c6)',f:days?tr('avg_day',Math.round(n/days*10)/10):'—'});
-  s+=card({l:tr('k_hours'),v:hrs(h),c:'var(--c5)',f:days&&h?tr('hpd',hrs(Math.round(h/days*10)/10)):tr('enter_hours')});
-  $('kpis').innerHTML=s;
+  const nDone=all.filter(e=>stOf(e)==='done').length,nOpen=n-nDone,nOver=all.filter(e=>dueState(e)==='over').length,pct=x=>n?Math.round(x/n*100)+'%':'—';
+  s='';
+  CFG.kpis.forEach(k=>{
+    if(k.t==='total')s+=card({l:tr('k_total'),v:n,c:'var(--accent)',f:delta===null?'—':'<span class="'+(delta>=0?'up':'down')+'">'+(delta>=0?'▲':'▼')+' '+Math.abs(delta)+'%</span> '+tr('vs')+' '+pl,tip:periodLabel()});
+    else if(k.t==='cat'&&CATS[k.id]){const c=k.id,v=cc[c]||0;s+=card({act:'cat',k:c,on:S.f.cat===c,l:catL(c),v,c:colorOf(c),f:Math.round(v/ct*100)+'% '+tr('of_work'),tip:tr('show_only',catL(c))})}
+    else if(k.t==='days')s+=card({l:tr('k_days'),v:days,c:'var(--c6)',f:days?tr('avg_day',Math.round(n/days*10)/10):'—'});
+    else if(k.t==='hours')s+=card({l:tr('k_hours'),v:hrs(h),c:'var(--c5)',f:days&&h?tr('hpd',hrs(Math.round(h/days*10)/10)):tr('enter_hours')});
+    else if(k.t==='done')s+=card({act:'status',k:'done',on:S.f.status==='done',l:tr('done'),v:nDone,c:'var(--c2)',f:pct(nDone)});
+    else if(k.t==='open')s+=card({act:'status',k:'progress',on:S.f.status==='progress',l:tr('progress'),v:nOpen,c:'var(--gold)',f:pct(nOpen)});
+    else if(k.t==='overdue')s+=card({l:tr('due_over'),v:nOver,c:'var(--c4)',f:nOver?tr('due_over'):'—'});
+    else if(k.t==='rate')s+=card({l:tr('completion'),v:pct(nDone),c:'var(--c2)',f:nDone+' / '+n});
+  });
+  const kb=$('kpis');kb.style.setProperty('--kn',Math.max(1,Math.min(6,CFG.kpis.length)));
+  kb.innerHTML=s;tweenKpis();
 }
 function renderFbar(){
   const f=S.f,ch=[];
@@ -290,6 +452,8 @@ function listRows(){const q=S.q.trim().toLowerCase();let r=S.f.due?S.entries.fil
   if(q)r=r.filter(e=>[e.title,e.notes,e.ref,e.party,e.action,e.matter,e.category,catL(catOf(e)),actL(e.action||'')].join(' ').toLowerCase().includes(q));
   if(S.f.due)return r.sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0);
   const d=S.asc?1:-1;return r.sort((a,b)=>a.date<b.date?-d:a.date>b.date?d:d*((a.createdAt||0)-(b.createdAt||0)))}
+renderList.seen=new Set();renderList.ready=false;
+const rowIsNew=id=>renderList.ready&&!renderList.seen.has(id); /* rows that appear after the first screen glide in */
 function dueChip(e){const s=dueState(e);return s?'<span class="pill due-'+s+'" data-tip="'+esc(tr('due_f'))+'">'+esc(fShort.format(parse(e.due)))+'</span>':''}
 function renderList(){
   renderDueBar();
@@ -298,13 +462,15 @@ function renderList(){
   document.querySelectorAll('#stSeg button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.v||null)===(S.f.status==='progress'?'progress':null)));
   $('sortBtn').setAttribute('data-tip',S.asc?tr('oldest'):tr('newest'));
   if(!S.loaded){$('list').innerHTML='<div class="empty">'+tr('loading2')+'</div>';return}
+  if(!renderList.ready)setTimeout(()=>{renderList.ready=true},0); /* the first screen appears at once; rows added later glide in */
   if(!rows.length){$('list').innerHTML='<div class="empty"><div><strong>'+(S.entries.length?tr('none_here'):tr('empty_log'))+'</strong>'+(S.entries.length?tr('change_period'):tr('first_work'))+'</div></div>';return}
   let h='',cur=null;const dc=countBy(rows,e=>e.date);
   rows.slice(0,S.limit).forEach(e=>{
     if(e.date!==cur){cur=e.date;h+='<div class="dh"><b>'+fDay.format(parse(cur))+'</b><span class="num">'+(hijri(cur)?hijri(cur)+' · ':'')+dc[cur]+'</span></div>'}
     const pr=stOf(e)==='progress';
-    h+='<div class="it" data-act="edit" data-id="'+e.id+'"><i class="dot" style="background:'+catColor(catOf(e))+'"></i><div style="min-width:0"><div class="tt">'+esc(e.title)+'</div><div class="mt">'+esc(catL(catOf(e)))+(e.action?' · '+esc(actL(e.action)):'')+(e.ref?' · <span class="num">#'+esc(e.ref)+'</span>':'')+(e.party?' · '+esc(e.party):'')+(e.matter?' · <span class="mtr">'+esc(e.matter)+'</span>':'')+'</div>'+(e.notes?'<div class="np">'+esc(e.notes.split('\n')[0].slice(0,100))+'</div>':'')+'</div>'+
+    h+='<div class="it'+(rowIsNew(e.id)?' new':'')+'" data-act="edit" data-id="'+e.id+'"><i class="dot" style="background:'+catColor(catOf(e))+'"></i><div style="min-width:0"><div class="tt">'+esc(e.title)+'</div><div class="mt">'+esc(catL(catOf(e)))+(e.action?' · '+esc(actL(e.action)):'')+(e.ref?' · <span class="num">#'+esc(e.ref)+'</span>':'')+(e.party?' · '+esc(e.party):'')+(e.matter?' · <span class="mtr">'+esc(e.matter)+'</span>':'')+'</div>'+(e.notes?'<div class="np">'+esc(e.notes.split('\n')[0].slice(0,100))+'</div>':'')+'</div>'+
       '<div class="en">'+dueChip(e)+(e.hours?'<span class="num">'+hrs(e.hours)+' '+tr('h_short')+'</span>':'')+(pr?'<button class="chk" data-act="done" data-id="'+e.id+'" data-tip="'+tr('mark_done')+'" aria-label="'+tr('mark_done')+'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>':'<span class="pill ok">'+tr('done')+'</span>')+'</div></div>'});
+  rows.forEach(e=>renderList.seen.add(e.id));renderList.ready=true;
   if(rows.length>S.limit)h+='<div class="more"><button class="btn" data-act="more">'+tr('show_more')+' ('+(rows.length-S.limit)+')</button></div>';
   $('list').innerHTML=h;
 }
@@ -325,7 +491,7 @@ function renderForm(){
   $('catPick').innerHTML=CN.map(k=>'<button type="button" data-act="fcat" data-k="'+k+'" style="--cat:'+CATS[k].color+'" aria-pressed="'+(k===c)+'"><i></i>'+catL(k)+'</button>').join('');
   const cur=$('fAction').value;$('fAction').innerHTML=CATS[c].actions.map(a=>'<option value="'+esc(a)+'">'+esc(actL(a))+'</option>').join('');
   if(CATS[c].actions.includes(cur))$('fAction').value=cur;
-  $('fRef').placeholder=tr('ref_'+c);
+  $('fRef').placeholder=refLabel(c);
 }
 function renderAll(){renderHeader();renderFbar();renderKPIs();renderTrend();renderDonut();renderCal();renderActs();renderWd();renderRing();renderList();fillLists();renderNotes();renderBkBar()}
 
@@ -351,7 +517,7 @@ document.addEventListener('click',ev=>{
     case 'edit':openEdit(id);break;
     case 'done':{const e0=S.all.find(x=>x.id===id)||{};safe(()=>S.store.update(id,{status:'done',history:histWith(e0,{status:'done'}),updatedAt:Date.now()}),tr('marked_done'))}break;
     case 'fcat':S.form.cat=k;renderForm();$('fTitle').focus();break;
-    case 'skin':S.skin=k;lsSet('sijil.skin',k);applySkin();break;
+    case 'theme':if(S.skin!==k){S.skin=k;lsSet('sijil.theme',k);applySkin()}break;
     case 'menu':menu.hidden=!menu.hidden;break;
     case 'm-ai':menu.hidden=true;runSummary();break;
     case 'm-report':menu.hidden=true;openReport();break;
@@ -378,6 +544,16 @@ document.addEventListener('click',ev=>{
     case 'm-backup':menu.hidden=true;openBackup();break;
     case 'm-remind':menu.hidden=true;openRemind();break;
     case 'm-lock':menu.hidden=true;openLock();break;
+    case 'm-new':menu.hidden=true;onMenu('new');break;
+    case 'm-find':menu.hidden=true;onMenu('find');break;
+    case 'm-notes':menu.hidden=true;onMenu('notes');break;
+    case 'm-month':menu.hidden=true;onMenu('month');break;
+    case 'm-year':menu.hidden=true;onMenu('year');break;
+    case 'm-clear':menu.hidden=true;onMenu('clear');break;
+    case 'lock-now':onMenu('lock');break;
+    case 'm-lock-now':menu.hidden=true;onMenu('lock');break;
+    case 'm-setup':menu.hidden=true;openSetup();break;
+    case 'm-full':menu.hidden=true;onMenu('fullscreen');break;
     case 'bk-open':openBackup();break;
     case 'bk-snooze':BK.set({snooze:Date.now()+864e5});renderBkBar();break;
     case 't-restore':restoreEntry(id).then(()=>openTrash());break;
@@ -428,20 +604,18 @@ appEl.dataset.tab='list';
 function setTab(t){appEl.dataset.tab=t;document.querySelectorAll('.tabbar [data-tab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t));window.scrollTo(0,0)}
 function sheet(open){appEl.classList.toggle('sheet-open',open);if(open)$('notesRow').hidden=false;$('scrim').hidden=!open;if(!open)document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}
 /* themes live in the header on desktop, inside the menu on the phone */
-function placeSkins(){const sk=$('skins');if(phone.matches)menu.prepend(sk);else document.querySelector('.hend').insertBefore(sk,document.querySelector('.hend [data-act="menu"]'))}
-placeSkins();
-(phone.addEventListener?phone.addEventListener.bind(phone,'change'):phone.addListener.bind(phone))(()=>{placeSkins();if(!phone.matches)sheet(false)});
+(phone.addEventListener?phone.addEventListener.bind(phone,'change'):phone.addListener.bind(phone))(()=>{if(!phone.matches)sheet(false)});
 
 /* ---------- edit modal ---------- */
 function openEdit(id){
   const e=S.entries.find(x=>x.id===id);if(!e)return;tip.hidden=true;
   const cats=CN.includes(catOf(e))?CN:[...CN,catOf(e)];
-  const acts=c=>{const l=(CATS[c]||CATS['أخرى']).actions;return e.action&&!l.includes(e.action)&&catOf(e)===c?[e.action,...l]:l};
+  const acts=c=>{const l=(CATS[c]||CATS[DEFCAT]).actions;return e.action&&!l.includes(e.action)&&catOf(e)===c?[e.action,...l]:l};
   $('modalRoot').innerHTML='<div class="overlay"><form class="modal fade" id="editForm" role="dialog" aria-modal="true" aria-label="'+tr('edit_work')+'">'+
     '<div class="th"><h3>'+tr('edit_work')+'</h3><button type="button" class="iconbtn" data-act="close" aria-label="'+tr('close')+'">✕</button></div>'+
     '<input class="in" id="eTitle" value="'+esc(e.title)+'" maxlength="300" aria-label="'+tr('desc_l')+'">'+
     '<div class="mrow"><label class="lbl">'+tr('cat_f')+'<select class="in" id="eCat">'+cats.map(c=>'<option value="'+esc(c)+'"'+(c===catOf(e)?' selected':'')+'>'+esc(catL(c))+'</option>').join('')+'</select></label><label class="lbl">'+tr('action_f')+'<select class="in" id="eAction"></select></label></div>'+
-    '<div class="mrow"><label class="lbl">'+tr('ref_f')+'<input class="in num" id="eRef" value="'+esc(e.ref||'')+'" maxlength="60"></label><label class="lbl">'+tr('party_f')+'<input class="in" id="eParty" value="'+esc(e.party||'')+'" maxlength="120"></label></div>'+
+    '<div class="mrow"><label class="lbl">'+refLabel(catOf(e))+'<input class="in num" id="eRef" value="'+esc(e.ref||'')+'" maxlength="60"></label><label class="lbl">'+tr('party_f')+'<input class="in" id="eParty" value="'+esc(e.party||'')+'" maxlength="120"></label></div>'+
     '<div class="mrow3"><label class="lbl">'+tr('date_f')+'<input type="date" class="in num" id="eDate" value="'+esc(e.date)+'"></label><label class="lbl">'+tr('hours_f')+'<input type="number" class="in num" id="eHours" min="0" max="24" step="0.25" value="'+(e.hours||'')+'"></label>'+
     '<label class="lbl">'+tr('status_f')+'<select class="in" id="eStatus"><option value="done"'+(stOf(e)==='done'?' selected':'')+'>'+tr('done')+'</option><option value="progress"'+(stOf(e)==='progress'?' selected':'')+'>'+tr('progress')+'</option></select></label></div>'+
     '<div class="mrow"><label class="lbl">'+tr('matter_f')+'<input class="in" id="eMatter" list="dlMatters" value="'+esc(e.matter||'')+'" maxlength="120"></label><label class="lbl">'+tr('due_f')+'<input type="date" class="in num" id="eDue" value="'+esc(e.due||'')+'"></label></div>'+
@@ -461,7 +635,7 @@ function openEdit(id){
 }
 /* close with a short fade; a dialog opened meanwhile replaces this one, so the timer only removes what is still ours */
 function closeModal(){
-  ddClose(true);const r=$('modalRoot'),ov=r.firstElementChild;if(!ov)return;
+  ddClose(true);dpClose(true);const r=$('modalRoot'),ov=r.firstElementChild;if(!ov)return;
   ov.classList.add('closing');setTimeout(()=>{if(ov.parentNode===r)ov.remove()},170);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();menu.hidden=true;if(!phone.matches)notesOpen(false);sheet(false)}});
@@ -496,7 +670,7 @@ async function saveFile(filename,data){
 const BK={get(){try{return JSON.parse(lsGet('sijil.bk')||'{}')}catch(e){return{}}},set(o){lsSet('sijil.bk',JSON.stringify({...BK.get(),...o}))}};
 const isTauri=()=>!!(window.__TAURI__&&window.__TAURI__.core);
 /* the file used for backup AND for syncing to another device: everything, including notes and the trash */
-function backupJson(){return JSON.stringify({app:'sijil',version:3,owner:OWNER,exported:new Date().toISOString(),entries:S.all.map(({id,...r})=>r),notes:S.notes.map(({id,...r})=>r)},null,1)}
+function backupJson(){return JSON.stringify({app:'sijil',version:4,owner:OWNER,config:CFG,exported:new Date().toISOString(),entries:S.all.map(({id,...r})=>r),notes:S.notes.map(({id,...r})=>r)},null,1)}
 async function backup(){
   const ok=await saveFile(tr('fn_backup')+today()+'.json',backupJson());
   if(ok){BK.set({last:Date.now(),snooze:0});renderBkBar();if($('bkDlg'))openBackup()}
@@ -515,8 +689,8 @@ function renderBkBar(){
   let msg='';
   if(isTauri()&&b.dir&&b.err)msg=tr('bk_fail',b.err);
   else if(!auto&&S.loaded&&S.all.length>=3&&!(b.snooze&&Date.now()<b.snooze)&&(age===null||age>=7))msg=age===null?tr('bk_bar_never'):tr('bk_bar_old',age);
-  el.hidden=!msg;
-  el.innerHTML=msg?'<span>'+esc(msg)+'</span><button type="button" class="dchip" data-act="bk-open">'+tr('bk_title')+'</button><button type="button" class="dchip" data-act="bk-snooze">'+tr('dismiss')+'</button>':'';
+  barShow(el,!!msg);
+  if(msg)el.firstElementChild.innerHTML='<span>'+esc(msg)+'</span><button type="button" class="dchip" data-act="bk-open">'+tr('bk_title')+'</button><button type="button" class="dchip" data-act="bk-snooze">'+tr('dismiss')+'</button>';
 }
 function openBackup(){
   const b=BK.get(),tauri=isTauri(),last=b.last?new Intl.DateTimeFormat(L,{dateStyle:'medium',timeStyle:'short'}).format(new Date(b.last)):null;
@@ -542,7 +716,7 @@ function exportCsv(){
 }
 /* ---------- import and merge (backup file or a file from another device) ---------- */
 function cleanEntry(e){
-  const o={title:String(e.title).slice(0,300),date:e.date,category:String(e.category||'أخرى').slice(0,40),action:String(e.action||'').slice(0,60),ref:String(e.ref||'').slice(0,60),party:String(e.party||'').slice(0,120),
+  const o={title:String(e.title).slice(0,300),date:e.date,category:String(e.category||DEFCAT).slice(0,40),action:String(e.action||'').slice(0,60),ref:String(e.ref||'').slice(0,60),party:String(e.party||'').slice(0,120),
     matter:String(e.matter||'').slice(0,120),due:/^\d{4}-\d{2}-\d{2}$/.test(e.due||'')?e.due:'',hours:+e.hours||null,status:e.status==='progress'?'progress':'done',notes:String(e.notes||'').slice(0,3000),createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
   if(e.trashedAt)o.trashedAt=+e.trashedAt;
   if(Array.isArray(e.history))o.history=e.history.slice(-30).map(h=>({at:+(h&&h.at)||0,changes:Array.isArray(h&&h.changes)?h.changes.map(String).slice(0,12):[]}));
@@ -551,6 +725,9 @@ function cleanEntry(e){
 $('importFile').onchange=async ev=>{
   menu.hidden=true;const f=ev.target.files[0];ev.target.value='';if(!f)return;
   let data;try{data=JSON.parse(await f.text())}catch(e){toast(tr('bad_file'));return}
+  /* a backup from another department brings its setup along, unless this device already has its own edited one */
+  const ic=data.config&&normalizeCfg(data.config);
+  if(ic&&!CFG.edited&&JSON.stringify(ic.cats)!==JSON.stringify(CFG.cats))await saveCfg(ic);
   const keys=new Set(S.all.map(e=>e.date+'|'+e.title));
   const fresh=(Array.isArray(data.entries)?data.entries:[]).filter(e=>e&&e.title&&/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&!keys.has(e.date+'|'+e.title));
   const nkeys=new Set(S.notes.map(n=>n.text));
@@ -594,11 +771,21 @@ function histHtml(e){
 /* ---------- follow-ups (due dates) ---------- */
 const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
 const dueState=e=>{if(stOf(e)!=='progress'||!e.due)return null;const t=today();return e.due<t?'over':e.due<=addDays(t,7)?'soon':'later'};
+/* bars expand and collapse with a pull-down motion instead of popping in and out */
+function barShow(el,show){
+  if(show){
+    if(el.hidden){el.hidden=false;el.classList.remove('leaving','entered');void el.offsetWidth}
+    el.classList.remove('leaving');el.classList.add('entered');
+  }else if(!el.hidden&&!el.classList.contains('leaving')){
+    el.classList.add('leaving');el.classList.remove('entered');
+    setTimeout(()=>{if(el.classList.contains('leaving')){el.hidden=true;el.classList.remove('leaving')}},420);
+  }
+}
 function renderDueBar(){
   const el=$('dueBar');if(!el)return;
   const o=S.entries.filter(e=>dueState(e)==='over').length,s=S.entries.filter(e=>dueState(e)==='soon').length;
-  el.hidden=!(o||s);
-  el.innerHTML=(o?'<button type="button" class="dchip over" data-act="due" data-k="over" aria-pressed="'+(S.f.due==='over')+'">'+tr('due_over_n',o)+'</button>':'')+(s?'<button type="button" class="dchip soon" data-act="due" data-k="soon" aria-pressed="'+(S.f.due==='soon')+'">'+tr('due_soon_n',s)+'</button>':'');
+  barShow(el,!!(o||s));
+  if(o||s)el.firstElementChild.innerHTML=(o?'<button type="button" class="dchip over" data-act="due" data-k="over" aria-pressed="'+(S.f.due==='over')+'">'+tr('due_over_n',o)+'</button>':'')+(s?'<button type="button" class="dchip soon" data-act="due" data-k="soon" aria-pressed="'+(S.f.due==='soon')+'">'+tr('due_soon_n',s)+'</button>':'');
 }
 
 /* ---------- notes (free-standing, separate from the work log) ---------- */
@@ -676,10 +863,13 @@ const LK={get(){try{return JSON.parse(lsGet('sijil.lock')||'null')}catch(e){retu
 const canLock=!!(window.crypto&&window.crypto.subtle);
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 const rnd=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>'abcdefghjkmnpqrstuvwxyz23456789'[x%31]).join('');
+const lockOut=x=>{x.classList.add('out');setTimeout(()=>x.remove(),300)};
 /* passkey (Face ID / Touch ID / Windows Hello): a WebAuthn credential kept on THIS device. It only unlocks the screen;
    the PIN stays as a fallback. We verify the signature against the public key saved at setup. */
 let pkOk=false;
 try{if(window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(v=>{pkOk=!!v}).catch(()=>{})}catch(e){}
+/* re-checked whenever the lock dialog opens, so a device that appears later (Windows Hello turned on, a phone paired) is picked up */
+const refreshPk=async()=>{try{pkOk=!!(window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){pkOk=false}};
 const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const unb64u=s=>Uint8Array.from(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((String(s).length+3)%4)),c=>c.charCodeAt(0));
 function derToRaw(d){ /* ECDSA signature DER -> r||s (64 bytes) for WebCrypto */
@@ -711,32 +901,50 @@ const canCross=!!(window.PublicKeyCredential)&&!/Android|iPhone|iPad|iPod/i.test
 const pkSection=lk=>(pkOk||lk.pk?'<div class="lbl">'+tr('lk_pk')+'<div class="brow">'+(lk.pk?'<span class="path">✓ '+tr('lk_pk_on')+'</span><button type="button" class="btn dan" id="pkRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pkAdd">'+tr('lk_pk_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_pk_help')+'</p>':'')+
   (canCross||lk.pkx?'<div class="lbl">'+tr('lk_px')+'<div class="brow">'+(lk.pkx?'<span class="path">✓ '+tr('lk_px_on')+'</span><button type="button" class="btn dan" id="pxRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pxAdd">'+tr('lk_px_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_px_help')+'</p>':'');
 let lockTries=0,lockUntil=0,hiddenAt=0;
+/* Face ID–style glyph: corner brackets + face (or a padlock when no passkey is set), a scan line, and a check that draws on success */
+const fidSvg=face=>'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><g><path class="corner" d="M8 22v-6a8 8 0 018-8h6"/><path class="corner" d="M42 8h6a8 8 0 018 8v6"/><path class="corner" d="M56 42v6a8 8 0 01-8 8h-6"/><path class="corner" d="M22 56h-6a8 8 0 01-8-8v-6"/></g>'+
+  (face?'<g class="face"><path d="M24 25v5M40 25v5M32 26v9a2 2 0 01-2 2"/><path d="M24 43c2.5 3 5 4 8 4s5.5-1 8-4"/></g>':'<g class="face"><rect x="20" y="30" width="24" height="18" rx="4"/><path d="M25 30v-5a7 7 0 0114 0v5"/></g>')+
+  '<path class="scan" d="M14 32h36"/><path class="check" d="M20 33l9 9 16-18"/></svg>';
 function showLock(){
   const lk=LK.get();if(!lk||$('lockScr'))return;
   const d=document.createElement('div');d.id='lockScr';d.className='lockscr';
-  d.innerHTML='<div class="lockbox"><div class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div><h2>'+tr('lk_locked')+'</h2>'+
+  d.innerHTML='<div class="lockbox"><div class="fid" aria-hidden="true">'+fidSvg(!!(lk.pk||lk.pkx))+'</div><h2>'+tr('lk_locked')+'</h2>'+
     '<input class="in num" id="lkPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+tr('lk_enter')+'" aria-label="'+tr('lk_enter')+'"><button type="button" class="pri" id="lkGo">'+tr('lk_unlock')+'</button>'+(lk.pk?'<button type="button" class="btn" id="lkPk">'+tr('lk_pk_unlock')+'</button>':'')+(lk.pkx?'<button type="button" class="btn" id="lkPx">'+tr('lk_px_unlock')+'</button>':'')+'<div class="lkmsg" id="lkMsg" role="alert"></div>'+
     '<button type="button" class="ghost" id="lkForgot">'+tr('lk_forgot')+'</button><div id="lkRec" hidden><input class="in" id="lkRc" autocomplete="off" placeholder="'+tr('lk_recovery')+'"><button type="button" class="btn" id="lkRs">'+tr('lk_reset')+'</button></div></div>';
   document.body.appendChild(d);
   const msg=t=>{$('lkMsg').textContent=t};
+  const fid=d.querySelector('.fid'),box=d.querySelector('.lockbox');
+  /* success: the glyph turns green and draws a check, the form fades, then the lock dissolves (zoom + blur) while the app comes into focus */
+  const succeed=()=>{
+    if(d.dataset.done)return;d.dataset.done='1';lockTries=0;fid.classList.remove('scanning');fid.classList.add('ok');box.classList.add('ok');
+    d.querySelector('h2').textContent=tr('lk_done');try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
+    setTimeout(()=>{const app=document.querySelector('.app');app.classList.add('reveal-in');d.classList.add('reveal');setTimeout(()=>{d.remove();app.classList.remove('reveal-in')},640)},720);
+  };
+  /* failure: the box shakes like the iOS passcode screen */
+  const fail=t=>{fid.classList.remove('scanning');box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake');try{navigator.vibrate&&navigator.vibrate([40,40,40])}catch(e){}msg(t)};
   const go=async()=>{
-    const now=Date.now();if(now<lockUntil){msg(tr('lk_wait',Math.ceil((lockUntil-now)/1000)));return}
-    if(await sha(lk.salt+$('lkPin').value)===lk.hash){lockTries=0;d.remove()}
-    else{lockTries++;$('lkPin').value='';if(lockTries>=5){lockUntil=Date.now()+30000;lockTries=0;msg(tr('lk_wait',30))}else msg(tr('lk_wrong'))}
+    const now=Date.now();if(now<lockUntil){fail(tr('lk_wait',Math.ceil((lockUntil-now)/1000)));return}
+    if(await sha(lk.salt+$('lkPin').value)===lk.hash)succeed();
+    else{lockTries++;$('lkPin').value='';if(lockTries>=5){lockUntil=Date.now()+30000;lockTries=0;fail(tr('lk_wait',30))}else fail(tr('lk_wrong'))}
   };
   $('lkGo').onclick=go;$('lkPin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
-  const via=async(pk,cross,quiet)=>{try{if(await passkeyAssert(pk,cross)){lockTries=0;d.remove()}else if(!quiet)msg(tr(cross?'lk_px_fail':'lk_pk_fail'))}catch(e){if(!quiet)msg(tr(cross?'lk_px_fail':'lk_pk_fail'))}};
+  const via=async(pk,cross,quiet)=>{
+    fid.classList.add('scanning');
+    try{if(await passkeyAssert(pk,cross))succeed();else{fid.classList.remove('scanning');if(!quiet)fail(tr(cross?'lk_px_fail':'lk_pk_fail'))}}
+    catch(e){fid.classList.remove('scanning');if(!quiet)fail(tr(cross?'lk_px_fail':'lk_pk_fail'))}
+  };
   if(lk.pk){$('lkPk').onclick=()=>via(lk.pk,false,false);setTimeout(()=>via(lk.pk,false,true),350)} /* ask for Face ID right away; the button covers the case where the phone needs a tap first */
   if(lk.pkx)$('lkPx').onclick=()=>via(lk.pkx,true,false); /* the phone / QR route always waits for a tap */
   $('lkForgot').onclick=()=>{$('lkRec').hidden=false;$('lkRc').focus()};
-  $('lkRs').onclick=async()=>{if(await sha(lk.salt+'rc:'+$('lkRc').value.trim().toLowerCase())===lk.rc){LK.set(null);d.remove();toast(tr('lk_disabled'))}else msg(tr('lk_wrong'))};
+  $('lkRs').onclick=async()=>{if(await sha(lk.salt+'rc:'+$('lkRc').value.trim().toLowerCase())===lk.rc){LK.set(null);lockOut(d);toast(tr('lk_disabled'))}else msg(tr('lk_wrong'))};
   setTimeout(()=>{const p=$('lkPin');if(p)p.focus()},60);
 }
 document.addEventListener('visibilitychange',()=>{
   const lk=LK.get();if(!lk)return;
   if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>=(lk.mins||0)*60000)showLock();
 });
-function openLock(){
+async function openLock(){
+  await refreshPk();
   if(!canLock){dlg(tr('lk_title'),'<p>'+tr('lk_unsupported')+'</p>');return}
   const lk=LK.get(),sel=m=>'<label class="lbl">'+tr('lk_after')+'<select class="in" id="lkMins">'+[[0,'lk_now'],[1,'lk_1'],[5,'lk_5'],[15,'lk_15']].map(([v,k])=>'<option value="'+v+'"'+(v===m?' selected':'')+'>'+tr(k)+'</option>').join('')+'</select></label>';
   const pin=(id,ph)=>'<input class="in num" id="'+id+'" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+ph+'" aria-label="'+ph+'">';
@@ -923,7 +1131,7 @@ function showSummary(){
 const chat={turns:[],undo:[],ctl:null,busy:false};
 const compact=e=>({id:e.id,date:e.date,category:catOf(e),action:e.action||'',title:e.title,ref:e.ref||'',party:e.party||'',hours:e.hours||0,status:stOf(e),notes:(e.notes||'').slice(0,160)});
 function chatRules(){
-  return 'أنت مساعد داخل تطبيق "سجل إنجاز '+OWNER+'"، يعمل في إدارة قانونية. تتحكم بالتطبيق عبر الأدوات المتاحة لك فقط.\n'+
+  return 'أنت مساعد داخل تطبيق "سجل إنجاز '+OWNER+'"، يعمل في «'+(deptName()||'—')+'». تتحكم بالتطبيق عبر الأدوات المتاحة لك فقط.\n'+
   'تاريخ اليوم: '+today()+' ('+WDL[new Date().getDay()]+').\nالتصنيفات والإجراءات المسموحة:\n'+CN.map(c=>'- '+c+': '+CATS[c].actions.join('، ')).join('\n')+
   '\nالقواعد: (1) نفّذ الطلب بالأدوات ثم أجب بجملة أو جملتين بالعربية. (2) للاستعلام والأرقام استخدم get_records ولا تخمّن. (3) لا تخترع بيانات لم يذكرها المستخدم: إن نقص حقل أساسي كالعنوان فاسأله. (4) لا توجد أداة حذف، وإن طلب الحذف فأخبره أن الحذف يتم يدوياً من نافذة التعديل. (5) التواريخ بصيغة YYYY-MM-DD، وفسّر "اليوم" و"أمس" و"هذا الشهر" من تاريخ اليوم أعلاه. (6) اختر التصنيف والإجراء من القائمة أعلاه فقط.';
 }
@@ -995,24 +1203,26 @@ async function undoLast(i){
 }
 
 /* ---------- desktop shell (Tauri): platform flags + native menu events ---------- */
-function cycleSkin(){const ks=SKINS.map(s=>s[0]);S.skin=ks[(ks.indexOf(S.skin)+1)%ks.length];lsSet('sijil.skin',S.skin);applySkin()}
 function onMenu(id){
   switch(id){
-    case 'new':$('fTitle').focus();break;
-    case 'find':$('q').focus();break;
+    case 'new':if(phone.matches)sheet(true);else{notesOpen(false);$('fTitle').focus()}break;
+    case 'find':if(phone.matches)setTab('list');$('q').focus();break;
+    case 'notes':notesOpen();break;
+    case 'fullscreen':{const w=window.__TAURI__&&window.__TAURI__.window&&window.__TAURI__.window.getCurrentWindow();if(w)w.isFullscreen().then(v=>w.setFullscreen(!v)).catch(()=>{})}break;
     case 'csv':exportCsv();break;
-    case 'backup':backup();break;
+    case 'backup':openBackup();break;
     case 'copy':copyText(reportText());break;
     case 'report':openReport();break;
     case 'month':S.period='month';S.f.day=null;renderAll();break;
     case 'year':S.period='year';S.f.day=null;renderAll();break;
     case 'clear':S.f={cat:null,action:null,day:null,status:null,matter:null,due:null};renderAll();break;
-    case 'skin':cycleSkin();break;
+    case 'skin':toggleTheme();break;
+    case 'lock':LK.get()?showLock():openLock();break;
   }
 }
 async function initNative(){
   const T=window.__TAURI__;if(!T||!T.core)return;
-  try{const info=await T.core.invoke('app_info');const r=document.documentElement;r.dataset.platform=info.platform;if(info.platform!=='macos'){r.dataset.chrome='custom';setupChrome()}if(info.vibrancy)r.dataset.vibrant='1';S.dataDir=info.dataDir;renderHeader()}catch(e){}
+  try{const info=await T.core.invoke('app_info');const r=document.documentElement;r.dataset.platform=info.platform;if(info.platform!=='macos'){r.dataset.chrome='custom';setupChrome();setupShortcuts()}if(info.vibrancy)r.dataset.vibrant='1';S.dataDir=info.dataDir;renderHeader()}catch(e){}
   try{await T.event.listen('menu',ev=>onMenu(ev.payload))}catch(e){}
 }
 
@@ -1027,9 +1237,22 @@ function setupChrome(){
   window.addEventListener('focus',()=>root.classList.remove('inactive'));window.addEventListener('blur',()=>root.classList.add('inactive'));
   hdr.removeAttribute('data-tauri-drag-region'); /* we drive dragging ourselves so every empty part of the toolbar moves the window */
   hdr.addEventListener('mousedown',ev=>{
-    if(ev.button!==0||ev.target.closest('button,select,input,textarea,a,label,.menu,.skins'))return;
+    if(ev.button!==0||ev.target.closest('button,select,input,textarea,a,label,.menu'))return;
     if(ev.detail===2)w.toggleMaximize();else w.startDragging();
   });
+}
+/* The old native menu bar (File / Edit / View / Window) lives inside the app now: its items are in the ⋯ menu, and its
+   shortcuts work here. macOS keeps its real menu bar, so this only runs where the window chrome is ours. */
+function setupShortcuts(){
+  document.querySelectorAll('.menu kbd[data-k]').forEach(k=>{const v=k.dataset.k;k.textContent='Ctrl+'+(v[0]==='⇧'?'Shift+'+v.slice(1):v)});
+  const plain={n:'new',f:'find',r:'report',e:'csv',l:'lock','1':'month','2':'year'},shifted={n:'notes',c:'copy',b:'backup',k:'clear',t:'skin'};
+  document.addEventListener('keydown',e=>{
+    if(DD.cur||DP.cur||$('lockScr'))return;
+    if(e.key==='F11'){e.preventDefault();onMenu('fullscreen');return}
+    if(!(e.ctrlKey||e.metaKey)||e.altKey||$('modalRoot').firstElementChild)return;
+    const a=(e.shiftKey?shifted:plain)[e.key.toLowerCase()];
+    if(!a)return;e.preventDefault();e.stopPropagation();onMenu(a);
+  },true);
 }
 /* thin overlay scrollbars that appear while you scroll, like macOS */
 document.addEventListener('scroll',e=>{const t=e.target===document?document.documentElement:e.target;if(!t||!t.classList)return;t.classList.add('sb-on');clearTimeout(t._sb);t._sb=setTimeout(()=>t.classList.remove('sb-on'),900)},true);
@@ -1037,6 +1260,7 @@ document.addEventListener('scroll',e=>{const t=e.target===document?document.docu
 /* ---------- Apple-style dropdowns (mouse devices only; touch devices keep the native picker) ----------
    The real <select> stays in the page, hidden, as the source of truth: existing code keeps reading .value and listening for "change". */
 const DD={on:matchMedia('(hover:hover) and (pointer:fine)').matches,cur:null};
+const DP={cur:null}; /* date picker state (declared here: the scan below runs at load) */
 function ddEnsure(sel){
   if(!DD.on||sel.dataset.dd)return;sel.dataset.dd='1';
   const w=document.createElement('div');w.className='dd '+sel.className;
@@ -1054,7 +1278,7 @@ function ddSync(sel){
 function ddOpen(sel,w){
   ddClose(true);
   const all=[...sel.options],pop=document.createElement('div');pop.className='dd-pop';pop.setAttribute('role','listbox');
-  pop.innerHTML=all.map((o,i)=>o.disabled?'':'<div class="dd-item'+(o.selected?' sel hi':'')+'" role="option" aria-selected="'+o.selected+'" data-i="'+i+'"><svg class="dd-chk" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5l2.5 2.5 4.5-5.5"/></svg><span>'+esc(o.textContent)+'</span></div>').join('');
+  pop.innerHTML=all.map((o,i)=>o.disabled?'':'<div class="dd-item'+(o.selected?' on hi':'')+'" role="option" aria-selected="'+o.selected+'" data-i="'+i+'"><svg class="dd-chk" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5l2.5 2.5 4.5-5.5"/></svg><span>'+esc(o.textContent)+'</span></div>').join('');
   document.body.appendChild(pop);
   const r=w.getBoundingClientRect(),maxH=Math.min(340,innerHeight-24);
   pop.style.minWidth=Math.max(r.width,168)+'px';pop.style.maxHeight=maxH+'px';
@@ -1064,8 +1288,8 @@ function ddOpen(sel,w){
   let left=RTL()?r.right-pw:r.left;left=Math.max(8,Math.min(left,innerWidth-pw-8));
   pop.style.top=top+'px';pop.style.left=left+'px';pop.style.transformOrigin=origin+(RTL()?' right':' left');
   DD.cur={sel,w,pop};w.classList.add('open');w.firstChild.setAttribute('aria-expanded','true');
-  requestAnimationFrame(()=>pop.classList.add('in'));
-  const s=pop.querySelector('.sel');if(s)s.scrollIntoView({block:'nearest'});
+  void pop.offsetWidth;pop.classList.add('show');
+  const s=pop.querySelector('.on');if(s)s.scrollIntoView({block:'nearest'});
   pop.addEventListener('mousemove',e=>{const it=e.target.closest('.dd-item');if(it)ddHi(it)});
   pop.addEventListener('mousedown',e=>e.preventDefault());
   pop.addEventListener('click',e=>{const it=e.target.closest('.dd-item');if(it)ddPick(+it.dataset.i)});
@@ -1074,7 +1298,7 @@ function ddHi(it){const c=DD.cur;if(!c)return;c.pop.querySelectorAll('.hi').forE
 function ddClose(instant){
   const c=DD.cur;if(!c)return;DD.cur=null;if(!c.ac){c.w.classList.remove('open');c.w.firstChild.setAttribute('aria-expanded','false')}
   if(instant){c.pop.remove();return}
-  c.pop.classList.remove('in');setTimeout(()=>c.pop.remove(),180);
+  c.pop.classList.remove('show');setTimeout(()=>c.pop.remove(),200);
 }
 /* autocomplete for text fields (title, party, matter): same popover, fed by the <datalist> the app already fills */
 function acEnsure(inp){
@@ -1096,7 +1320,7 @@ function acOpen(inp){
   const ph=Math.min(pop.scrollHeight,260);let top=r.bottom+6,origin='top';if(top+ph>innerHeight-8&&r.top-ph-6>8){top=r.top-ph-6;origin='bottom'}
   let left=RTL()?r.right-pop.offsetWidth:r.left;left=Math.max(8,Math.min(left,innerWidth-pop.offsetWidth-8));
   pop.style.top=top+'px';pop.style.left=left+'px';pop.style.transformOrigin=origin+(RTL()?' right':' left');
-  DD.cur={ac:true,inp,w:inp,sel:inp,pop,vals};requestAnimationFrame(()=>pop.classList.add('in'));
+  DD.cur={ac:true,inp,w:inp,sel:inp,pop,vals};void pop.offsetWidth;pop.classList.add('show');
   pop.addEventListener('mousemove',e=>{const it=e.target.closest('.dd-item');if(it)ddHi(it)});
   pop.addEventListener('mousedown',e=>e.preventDefault());
   pop.addEventListener('click',e=>{const it=e.target.closest('.dd-item');if(it)ddPick(+it.dataset.i)});
@@ -1116,7 +1340,7 @@ if(DD.on){
     const touched=new Set();
     ms.forEach(m=>{
       if(m.type==='attributes'){if(m.target.tagName==='SELECT')touched.add(m.target);return}
-      m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')ddEnsure(n);else if(n.querySelectorAll){n.querySelectorAll('select').forEach(ddEnsure);n.querySelectorAll('input[list]').forEach(acEnsure)}});
+      m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='SELECT')ddEnsure(n);else if(n.tagName==='INPUT'&&n.type==='date')dpEnsure(n);else if(n.querySelectorAll){n.querySelectorAll('select').forEach(ddEnsure);n.querySelectorAll('input[list]').forEach(acEnsure);n.querySelectorAll('input[type=date]').forEach(dpEnsure)}});
       const s=m.target.tagName==='SELECT'?m.target:(m.target.closest&&m.target.closest('select'));if(s)touched.add(s);
     });
     touched.forEach(ddSync);
@@ -1146,16 +1370,127 @@ if(DD.on){
   },true);
   document.querySelectorAll('select').forEach(ddEnsure);
   document.querySelectorAll('input[list]').forEach(acEnsure);
+  document.querySelectorAll('input[type=date]').forEach(dpEnsure);
+  const ivd=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  Object.defineProperty(HTMLInputElement.prototype,'value',{configurable:true,get(){return ivd.get.call(this)},set(v){ivd.set.call(this,v);if(this.dataset&&this.dataset.dp)dpSync(this)}});
+  document.addEventListener('mousedown',e=>{const c=DP.cur;if(c&&!c.pop.contains(e.target)&&!c.w.contains(e.target))dpClose()},true);
+  document.addEventListener('scroll',e=>{if(DP.cur&&!DP.cur.pop.contains(e.target))dpClose(true)},true);
+  window.addEventListener('resize',()=>dpClose(true));window.addEventListener('blur',()=>dpClose(true));
+  document.addEventListener('keydown',e=>{
+    const c=DP.cur;if(!c)return;const st=c.st;
+    const move=n=>{const d=parse(st.foc||st.sel||today());d.setDate(d.getDate()+n);st.foc=ymd(d);if(d.getMonth()!==st.m||d.getFullYear()!==st.y){const dir=(d.getFullYear()*12+d.getMonth())>(st.y*12+st.m)?1:-1;st.y=d.getFullYear();st.m=d.getMonth();dpDraw(dir)}else dpDraw(0)};
+    const rtl=RTL();let h=true;
+    if(e.key==='Escape')dpClose();
+    else if(e.key==='ArrowLeft')move(rtl?1:-1);else if(e.key==='ArrowRight')move(rtl?-1:1);
+    else if(e.key==='ArrowUp')move(-7);else if(e.key==='ArrowDown')move(7);
+    else if(e.key==='PageUp'){st.m--;if(st.m<0){st.m=11;st.y--}dpDraw(-1)}else if(e.key==='PageDown'){st.m++;if(st.m>11){st.m=0;st.y++}dpDraw(1)}
+    else if(e.key==='Enter'||e.key===' '){if(st.foc||st.sel)dpPick(st.foc||st.sel);else h=false}
+    else if(e.key==='Tab')dpClose();else h=false;
+    if(h){e.preventDefault();e.stopPropagation()}
+  },true);
+}
+
+/* ---------- motion: numbers count up, segmented controls glide ---------- */
+function tweenKpis(){
+  const prev=tweenKpis.prev||(tweenKpis.prev={});
+  document.querySelectorAll('#kpis .kpi').forEach((k,i)=>{
+    const b=k.querySelector('b');if(!b)return;const txt=b.textContent,to=parseFloat(txt);if(!isFinite(to))return;
+    const from=prev[i]??0;prev[i]=to;if(from===to)return;
+    const dec=/\./.test(txt)||!Number.isInteger(from),fmt=v=>dec?(Math.round(v*10)/10).toString():String(Math.round(v)),t0=performance.now(),dur=620;
+    b.textContent=fmt(from);
+    const step=t=>{const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,4);b.textContent=p>=1?txt:fmt(from+(to-from)*e);if(p<1)requestAnimationFrame(step)};
+    requestAnimationFrame(step);setTimeout(()=>{b.textContent=txt},dur+80); /* never leave a half-way number if frames are throttled */
+  });
+}
+function segEnsure(seg){
+  if(seg.dataset.th)return;seg.dataset.th='1';seg.classList.add('has-thumb');
+  const t=document.createElement('i');t.className='seg-thumb';seg.prepend(t);
+  const place=anim=>{
+    const b=seg.querySelector('button[aria-pressed="true"]');if(!b||!b.offsetWidth){t.style.opacity=0;return}
+    if(!anim)t.style.transition='none';
+    t.style.opacity=1;t.style.width=b.offsetWidth+'px';t.style.height=b.offsetHeight+'px';t.style.transform='translate('+b.offsetLeft+'px,'+b.offsetTop+'px)';
+    if(!anim){void t.offsetWidth;t.style.transition=''}
+  };
+  place(false);
+  new MutationObserver(()=>place(true)).observe(seg,{attributes:true,attributeFilter:['aria-pressed'],subtree:true});
+  if(window.ResizeObserver)new ResizeObserver(()=>place(false)).observe(seg);
+}
+document.querySelectorAll('.seg').forEach(segEnsure);
+new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.matches&&n.matches('.seg'))segEnsure(n);if(n.querySelectorAll)n.querySelectorAll('.seg').forEach(segEnsure)}))).observe(document.body,{childList:true,subtree:true});
+
+/* ---------- Apple-style date picker (mouse devices; the iPhone keeps its own native one) ---------- */
+function dpFmt(v){if(!v)return '';try{return new Intl.DateTimeFormat(L,{day:'numeric',month:'short',year:'numeric'}).format(parse(v))}catch(e){return v}}
+function dpEnsure(inp){
+  if(!DD.on||inp.dataset.dp||inp.type!=='date')return;inp.dataset.dp='1';
+  const w=document.createElement('div');w.className='dd dpw '+inp.className;
+  w.innerHTML='<button type="button" class="dd-btn" aria-haspopup="dialog" aria-expanded="false"><span class="dd-label"></span><svg class="dp-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></button>';
+  inp.classList.add('dd-native');inp.after(w);
+  const b=w.firstChild;b.addEventListener('click',()=>DP.cur&&DP.cur.inp===inp?dpClose():dpOpen(inp,w));
+  b.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();dpOpen(inp,w)}});
+  dpSync(inp);
+}
+function dpSync(inp){
+  const w=inp.nextElementSibling;if(!w||!w.classList.contains('dpw'))return;
+  const l=w.querySelector('.dd-label');l.textContent=inp.value?dpFmt(inp.value):tr('pick_date');l.classList.toggle('ph',!inp.value);
+  w.firstChild.setAttribute('aria-label',inp.getAttribute('aria-label')||'');
+}
+function dpOpen(inp,w){
+  dpClose(true);ddClose(true);
+  const ok=/^\d{4}-\d{2}-\d{2}$/.test(inp.value),base=ok?parse(inp.value):new Date();
+  const pop=document.createElement('div');pop.className='dd-pop dp-pop';pop.setAttribute('role','dialog');document.body.appendChild(pop);
+  DP.cur={inp,w,pop,st:{y:base.getFullYear(),m:base.getMonth(),sel:ok?inp.value:'',foc:''}};
+  dpDraw(0);
+  const r=w.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+  let top=r.bottom+6,origin='top';if(top+ph>innerHeight-8&&r.top-ph-6>8){top=r.top-ph-6;origin='bottom'}
+  top=Math.max(8,Math.min(top,innerHeight-ph-8));let left=RTL()?r.right-pw:r.left;left=Math.max(8,Math.min(left,innerWidth-pw-8));
+  pop.style.top=top+'px';pop.style.left=left+'px';pop.style.transformOrigin=origin+(RTL()?' right':' left');
+  w.classList.add('open');w.firstChild.setAttribute('aria-expanded','true');void pop.offsetWidth;pop.classList.add('show');
+  pop.addEventListener('mousedown',e=>e.preventDefault());pop.addEventListener('click',dpClick);
+}
+function dpDraw(dir){
+  const c=DP.cur;if(!c)return;const {y,m,sel,foc}=c.st,t=today();
+  const first=new Date(y,m,1).getDay(),nd=new Date(y,m+1,0).getDate(),pd=new Date(y,m,0).getDate();
+  const title=new Intl.DateTimeFormat(L,{month:'long',year:'numeric'}).format(new Date(y,m,1));
+  let cells='';
+  for(let i=0;i<42;i++){
+    const dn=i-first+1;let dt,out=false;
+    if(dn<1){dt=new Date(y,m-1,pd+dn);out=true}else if(dn>nd){dt=new Date(y,m+1,dn-nd);out=true}else dt=new Date(y,m,dn);
+    const k=ymd(dt);cells+='<button type="button" class="dp-d'+(out?' out':'')+(k===t?' today':'')+(k===sel?' sel':'')+(k===foc?' foc':'')+'" data-v="'+k+'">'+dt.getDate()+'</button>';
+  }
+  const chev='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">';
+  const clearable=/due/i.test(c.inp.id||'');
+  c.pop.innerHTML='<div class="dp-head"><button type="button" class="dp-nav" data-nav="-1" aria-label="'+tr('prev_m')+'">'+chev+'<path d="M15 6l-6 6 6 6"/></svg></button><div class="dp-title">'+esc(title)+'</div><button type="button" class="dp-nav" data-nav="1" aria-label="'+tr('next_m')+'">'+chev+'<path d="M9 6l6 6-6 6"/></svg></button></div>'+
+    '<div class="dp-wd">'+tr('wd1').split(',').map(x=>'<span>'+esc(x)+'</span>').join('')+'</div><div class="dp-grid'+(dir>0?' next':dir<0?' prev':'')+'">'+cells+'</div>'+
+    '<div class="dp-foot"><button type="button" data-today="1">'+tr('today_l')+'</button>'+(clearable?'<button type="button" data-clear="1">'+tr('clear_l')+'</button>':'<span></span>')+'</div>';
+}
+function dpClick(e){
+  const c=DP.cur;if(!c)return;
+  const d=e.target.closest('.dp-d'),n=e.target.closest('.dp-nav'),t=e.target.closest('[data-today]'),x=e.target.closest('[data-clear]');
+  if(d)dpPick(d.dataset.v);
+  else if(n){const s=+n.dataset.nav;c.st.m+=s;if(c.st.m<0){c.st.m=11;c.st.y--}if(c.st.m>11){c.st.m=0;c.st.y++}dpDraw(s)}
+  else if(t)dpPick(today());
+  else if(x)dpPick('');
+}
+function dpPick(v){
+  const c=DP.cur;if(!c)return;const inp=c.inp,btn=c.w.firstChild;dpClose();
+  inp.value=v;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));
+  try{btn.focus({preventScroll:true})}catch(e){}
+}
+function dpClose(instant){
+  const c=DP.cur;if(!c)return;DP.cur=null;c.w.classList.remove('open');c.w.firstChild.setAttribute('aria-expanded','false');
+  if(instant){c.pop.remove();return}
+  c.pop.classList.remove('show');setTimeout(()=>c.pop.remove(),200);
 }
 
 /* ---------- boot ---------- */
+setTimeout(()=>appEl.classList.remove('boot'),1800); /* cards rise in once at launch */
 if(canLock&&LK.get())showLock();
 setLang(LANG,true);
 initNative();
 renderForm();renderAll();
 const slowT=setTimeout(()=>{S.slow=true;renderFbar()},10000);
 initStore().then(store=>{
-  S.store=store;
+  S.store=store;syncCfgFromStore(store);
   store.subscribe((arr,meta)=>{S.all=arr.filter(e=>e&&e.date&&e.title);S.entries=S.all.filter(e=>!e.trashedAt);S.trash=S.all.filter(e=>e.trashedAt);
     if(!meta||!meta.fromCache||arr.length){S.loaded=true;clearTimeout(slowT);S.slow=false;if(!S.booted){S.booted=true;setTimeout(()=>{purgeTrash();autoBackup()},1500)}}renderAll()},
     ()=>{S.loaded=true;clearTimeout(slowT);renderAll();toast(tr('conn_lost'))});
