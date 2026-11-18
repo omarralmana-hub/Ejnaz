@@ -20,7 +20,7 @@ window.SIJIL_PRESETS = {
       { id: 'أخرى', name: { ar: 'أخرى', en: 'Other' }, color: 'c8', ref: { ar: 'المرجع', en: 'Reference' }, other: true, acts: [
         { ar: 'اجتماع', en: 'Meeting' }, { ar: 'استشارة', en: 'Consultation' }, { ar: 'متابعة', en: 'Follow-up' }, { ar: 'أخرى', en: 'Other' }] }
     ],
-    kpis: [{ t: 'total' }, { t: 'cat', id: 'عقود' }, { t: 'cat', id: 'خطابات' }, { t: 'cat', id: 'تحقيقات' }, { t: 'days' }, { t: 'hours' }]
+    kpis: [{ t: 'total' }, { t: 'cat', id: 'عقود' }, { t: 'cat', id: 'خطابات' }, { t: 'cat', id: 'تحقيقات' }, { t: 'days' }, { t: 'open' }]
   },
   hr: {
     name: { ar: 'الموارد البشرية', en: 'Human Resources' },
@@ -36,7 +36,7 @@ window.SIJIL_PRESETS = {
       { id: 'أخرى', name: { ar: 'أخرى', en: 'Other' }, color: 'c8', ref: { ar: 'المرجع', en: 'Reference' }, other: true, acts: [
         { ar: 'اجتماع', en: 'Meeting' }, { ar: 'متابعة', en: 'Follow-up' }, { ar: 'أخرى', en: 'Other' }] }
     ],
-    kpis: [{ t: 'total' }, { t: 'cat', id: 'hr-recruit' }, { t: 'cat', id: 'hr-relations' }, { t: 'cat', id: 'hr-payroll' }, { t: 'open' }, { t: 'hours' }]
+    kpis: [{ t: 'total' }, { t: 'cat', id: 'hr-recruit' }, { t: 'cat', id: 'hr-relations' }, { t: 'cat', id: 'hr-payroll' }, { t: 'open' }, { t: 'todo' }]
   },
   finance: {
     name: { ar: 'المالية', en: 'Finance' },
@@ -68,7 +68,7 @@ window.SIJIL_PRESETS = {
       { id: 'أخرى', name: { ar: 'أخرى', en: 'Other' }, color: 'c8', ref: { ar: 'المرجع', en: 'Reference' }, other: true, acts: [
         { ar: 'اجتماع', en: 'Meeting' }, { ar: 'متابعة', en: 'Follow-up' }, { ar: 'أخرى', en: 'Other' }] }
     ],
-    kpis: [{ t: 'total' }, { t: 'cat', id: 'it-tickets' }, { t: 'cat', id: 'it-projects' }, { t: 'cat', id: 'it-security' }, { t: 'open' }, { t: 'hours' }]
+    kpis: [{ t: 'total' }, { t: 'cat', id: 'it-tickets' }, { t: 'cat', id: 'it-projects' }, { t: 'cat', id: 'it-security' }, { t: 'open' }, { t: 'todo' }]
   },
   procurement: {
     name: { ar: 'المشتريات', en: 'Procurement' },
@@ -95,6 +95,6 @@ window.SIJIL_PRESETS = {
         { ar: 'إعداد تقرير', en: 'Prepare report' }, { ar: 'عرض', en: 'Presentation' }] },
       { id: 'أخرى', name: { ar: 'أخرى', en: 'Other' }, color: 'c8', ref: { ar: 'المرجع', en: 'Reference' }, other: true, acts: [{ ar: 'أخرى', en: 'Other' }] }
     ],
-    kpis: [{ t: 'total' }, { t: 'done' }, { t: 'open' }, { t: 'overdue' }, { t: 'days' }, { t: 'hours' }]
+    kpis: [{ t: 'total' }, { t: 'done' }, { t: 'open' }, { t: 'overdue' }, { t: 'days' }, { t: 'todo' }]
   }
 };

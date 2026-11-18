@@ -51,7 +51,6 @@
       <input class="in rf num" id="fRef" maxlength="60" aria-label="الرقم المرجعي" data-al="ref_l">
       <input class="in p" id="fParty" list="dlParties" maxlength="120" placeholder="الجهة / الطرف" data-ph="party_ph" aria-label="الجهة / الطرف" data-al="party_ph">
       <input class="in d num" type="date" id="fDate" aria-label="التاريخ" data-al="date_l">
-      <input class="in h num" type="number" id="fHours" min="0" max="24" step="0.25" placeholder="ساعات" data-ph="hours_ph" aria-label="ساعات" data-al="hours_ph">
       <div class="seg" id="fStatus" role="group" aria-label="الحالة" data-al="status_l"><button type="button" data-st="done" aria-pressed="true" data-i="done">منجز</button><button type="button" data-st="progress" aria-pressed="false" data-i="progress">جارٍ</button><button type="button" data-st="todo" aria-pressed="false" data-i="todo">لم يُنجز</button></div>
       <button type="button" class="iconbtn" id="bulkBtn" data-act="bulk-toggle" aria-pressed="false" aria-label="قائمة أعمال" data-al="bl_title" data-tip="قائمة أعمال" data-tt="bl_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></button>
       <button type="button" class="iconbtn" id="notesBtn" aria-label="إضافة تفاصيل" data-al="details_l" data-tip="إضافة تفاصيل أو نتيجة" data-tt="details_tip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
@@ -109,6 +108,7 @@
     <div class="menu" id="menu" hidden>
       <div class="langrow"><span data-i="lang">اللغة</span><div class="seg" id="langSeg" role="group"><button data-act="lang" data-k="ar" aria-pressed="true">العربية</button><button data-act="lang" data-k="en" aria-pressed="false">English</button></div></div>
       <div class="langrow"><span data-i="appearance">المظهر</span><div class="seg" id="themeSeg" role="group"><button data-act="theme" data-k="light" aria-pressed="false" data-i="theme_light">فاتح</button><button data-act="theme" data-k="dark" aria-pressed="false" data-i="theme_dark">داكن</button></div></div>
+      <div class="langrow desk"><span data-i="zoom_l">حجم الواجهة</span><div class="seg" role="group"><button data-act="zoom-out" aria-label="-">−</button><button data-act="zoom-reset" id="zoomVal">100%</button><button data-act="zoom-in" aria-label="+">+</button></div></div>
       <div class="mgroup" data-i="g_work">العمل</div>
       <button data-act="m-new"><span data-i="m_new">عمل جديد</span><kbd data-k="N"></kbd></button>
       <button data-act="m-find"><span data-i="m_find">بحث</span><kbd data-k="F"></kbd></button>
