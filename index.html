@@ -30,21 +30,9 @@
     <div class="hend">
       <button class="ghost" data-act="ask" id="askBtn" data-i="ask" hidden>اسأل Claude</button>
       <div class="skins" id="skins" role="group" aria-label="المظهر" data-al="theme"></div>
+      <button class="iconbtn" data-act="notes-toggle" id="notesBtnHdr" aria-label="الملاحظات" data-al="notes_tip" data-tip="الملاحظات" data-tt="notes_tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg></button>
       <button class="iconbtn" data-act="m-report" aria-label="تنزيل التقرير" data-al="dl_report" data-tip="تنزيل التقرير" data-tt="dl_report"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button>
       <button class="iconbtn" data-act="menu" aria-label="المزيد" data-al="more" data-tip="تصدير وأدوات" data-tt="more_tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
-    </div>
-    <div class="menu" id="menu" hidden>
-      <div class="langrow"><span data-i="lang">اللغة</span><div class="seg" id="langSeg" role="group"><button data-act="lang" data-k="ar" aria-pressed="true">العربية</button><button data-act="lang" data-k="en" aria-pressed="false">English</button></div></div>
-      <hr>
-      <button data-act="m-report" data-i="m_report">حفظ التقرير…</button>
-      <button data-act="m-ai" id="mAi" data-i="m_ai" hidden>صياغة ملخص رسمي للفترة</button>
-      <button data-act="m-csv" data-i="m_csv">تصدير Excel للفترة</button>
-      <button data-act="m-copy" data-i="m_copy">نسخ التقرير كنص</button>
-      <hr>
-      <button data-act="m-json" data-i="m_json">حفظ نسخة احتياطية</button>
-      <label for="importFile" data-i="m_import">استيراد نسخة احتياطية</label>
-      <hr>
-      <div class="note" id="storeNote"></div>
     </div>
     <input type="file" id="importFile" accept=".json,application/json" hidden>
   </header>
@@ -53,16 +41,21 @@
     <div class="sheet-h"><span class="grab" aria-hidden="true"></span><h2 data-i="new_work">عمل جديد</h2><button type="button" class="ghost" data-act="sheet-close" data-i="close">إغلاق</button></div>
     <form class="ebar" id="addForm" autocomplete="off">
       <div class="cpick" id="catPick" role="group" aria-label="التصنيف" data-al="cat_l"></div>
-      <input class="in t" id="fTitle" placeholder="سجّل عملاً جديداً…" data-ph="title_ph" maxlength="300" aria-label="وصف العمل" data-al="title_l">
+      <input class="in t" id="fTitle" list="dlTitles" placeholder="سجّل عملاً جديداً…" data-ph="title_ph" maxlength="300" aria-label="وصف العمل" data-al="title_l">
       <select class="in a" id="fAction" aria-label="الإجراء" data-al="action_l"></select>
       <input class="in rf num" id="fRef" maxlength="60" aria-label="الرقم المرجعي" data-al="ref_l">
-      <input class="in p" id="fParty" maxlength="120" placeholder="الجهة / الطرف" data-ph="party_ph" aria-label="الجهة / الطرف" data-al="party_ph">
+      <input class="in p" id="fParty" list="dlParties" maxlength="120" placeholder="الجهة / الطرف" data-ph="party_ph" aria-label="الجهة / الطرف" data-al="party_ph">
       <input class="in d num" type="date" id="fDate" aria-label="التاريخ" data-al="date_l">
       <input class="in h num" type="number" id="fHours" min="0" max="24" step="0.25" placeholder="ساعات" data-ph="hours_ph" aria-label="ساعات" data-al="hours_ph">
       <div class="seg" id="fStatus" role="group" aria-label="الحالة" data-al="status_l"><button type="button" data-st="done" aria-pressed="true" data-i="done">منجز</button><button type="button" data-st="progress" aria-pressed="false" data-i="progress">جارٍ</button></div>
       <button type="button" class="iconbtn" id="notesBtn" aria-label="إضافة تفاصيل" data-al="details_l" data-tip="إضافة تفاصيل أو نتيجة" data-tt="details_tip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
       <button class="pri" type="submit" data-i="log">تسجيل</button>
-      <div class="notes-row" id="notesRow" hidden><textarea class="in" id="fNotes" maxlength="3000" placeholder="التفاصيل، النتيجة أو التوصية" data-ph="notes_ph"></textarea></div>
+      <div class="notes-row" id="notesRow" hidden>
+        <input class="in m" id="fMatter" list="dlMatters" maxlength="120" placeholder="الملف: العقد أو القضية" data-ph="matter_ph" aria-label="الملف" data-al="matter_f">
+        <label class="duebox"><span data-i="due_f">موعد المتابعة</span><input class="in due num" type="date" id="fDue" aria-label="موعد المتابعة" data-al="due_f"></label>
+        <textarea class="in" id="fNotes" maxlength="3000" placeholder="التفاصيل، النتيجة أو التوصية" data-ph="notes_ph" aria-label="التفاصيل" data-al="details_f"></textarea>
+      </div>
+      <datalist id="dlTitles"></datalist><datalist id="dlParties"></datalist><datalist id="dlMatters"></datalist>
     </form>
   </div>
 
@@ -74,7 +67,7 @@
         <div class="tile"><div class="th"><h3 id="trendT">الأعمال</h3><small id="trendS"></small></div><div class="tb" id="trend"></div></div>
         <div class="tile"><div class="th"><h3 data-i="by_cat">حسب التصنيف</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="donut"></div></div>
         <div class="tile"><div class="th"><h3 id="calT">التقويم</h3><small id="calS"></small></div><div class="tb" id="cal"></div></div>
-        <div class="tile"><div class="th"><h3 data-i="act_type">نوع الإجراء</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="acts"></div></div>
+        <div class="tile"><div class="th"><h3 id="actT">نوع الإجراء</h3><div class="seg mini" id="actSeg" role="group"><button type="button" data-act="actview" data-v="actions" aria-pressed="true" data-i="seg_actions">الإجراءات</button><button type="button" data-act="actview" data-v="matters" aria-pressed="false" data-i="seg_matters">الملفات</button></div></div><div class="tb" id="acts"></div></div>
         <div class="tile"><div class="th"><h3 data-i="weekdays">أيام الأسبوع</h3><small id="wdS"></small></div><div class="tb" id="wd"></div></div>
         <div class="tile"><div class="th"><h3 data-i="completion">نسبة الإنجاز</h3><small data-i="filter_hint">اضغط للتصفية</small></div><div class="tb" id="ring"></div></div>
       </div>
@@ -82,6 +75,8 @@
     <section class="rec" aria-label="سجل الأعمال" data-al="log_work">
       <div class="rh">
         <div class="row1"><h2 data-i="log_work">سجل الأعمال</h2><span class="cnt num" id="tCnt"></span></div>
+        <div class="dues" id="dueBar" hidden></div>
+        <div class="bkbar" id="bkBar" hidden></div>
         <div class="row2">
           <input class="search" type="search" id="q" placeholder="بحث بالوصف أو الرقم أو الجهة" data-ph="search_ph" aria-label="بحث" data-al="search_ph">
           <div class="seg" id="stSeg"><button data-act="st" data-v="" aria-pressed="true" data-i="all">الكل</button><button data-act="st" data-v="progress" aria-pressed="false" data-i="progress">جارٍ</button></div>
@@ -91,13 +86,40 @@
       <div class="list" id="list"></div>
     </section>
   </div>
+  <section class="notes" id="notesPanel" aria-label="الملاحظات" data-al="notes">
+      <div class="nh"><h2 data-i="notes">الملاحظات</h2><button type="button" class="iconbtn nclose" data-act="notes-close" aria-label="إغلاق" data-al="close">✕</button></div>
+      <form class="nbar" id="noteForm" autocomplete="off">
+        <textarea class="in" id="noteIn" rows="3" maxlength="3000" placeholder="اكتب ملاحظة…" data-ph="note_ph" aria-label="ملاحظة" data-al="note_ph"></textarea>
+        <button class="pri" type="submit" data-i="note_add">إضافة</button>
+      </form>
+      <input class="search" type="search" id="noteQ" placeholder="بحث في الملاحظات" data-ph="note_search" aria-label="بحث في الملاحظات" data-al="note_search">
+      <div class="nlist" id="noteList"></div>
+  </section>
 </div>
 
+<div class="nscrim" id="nscrim" data-act="notes-close" hidden></div>
+    <div class="menu" id="menu" hidden>
+      <div class="langrow"><span data-i="lang">اللغة</span><div class="seg" id="langSeg" role="group"><button data-act="lang" data-k="ar" aria-pressed="true">العربية</button><button data-act="lang" data-k="en" aria-pressed="false">English</button></div></div>
+      <hr>
+      <button data-act="m-report" data-i="m_report">حفظ التقرير…</button>
+      <button data-act="m-ai" id="mAi" data-i="m_ai" hidden>صياغة ملخص رسمي للفترة</button>
+      <button data-act="m-csv" data-i="m_csv">تصدير Excel للفترة</button>
+      <button data-act="m-copy" data-i="m_copy">نسخ التقرير كنص</button>
+      <hr>
+      <button data-act="m-backup" data-i="m_backup">النسخ الاحتياطي والمزامنة…</button>
+      <button data-act="m-trash" data-i="m_trash">سلة المحذوفات…</button>
+      <button data-act="m-remind" data-i="m_remind">تذكير يومي…</button>
+      <button data-act="m-lock" data-i="m_lock">قفل التطبيق…</button>
+      <hr>
+      <div class="note" id="storeNote"></div>
+    </div>
 <div class="scrim" id="scrim" data-act="sheet-close" hidden></div>
 <nav class="tabbar" aria-label="التنقل" data-al="nav">
   <button data-act="tab" data-tab="list" aria-pressed="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i="tab_work">الأعمال</span></button>
+  <button data-act="tab" data-tab="notes" aria-pressed="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg><span data-i="tab_notes">الملاحظات</span></button>
   <button class="fab" data-act="sheet-open" aria-label="عمل جديد" data-al="new_work"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
   <button data-act="tab" data-tab="report" aria-pressed="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span data-i="tab_reports">التقارير</span></button>
+  <button data-act="menu" aria-pressed="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span data-i="tab_more">المزيد</span></button>
 </nav>
 <div id="modalRoot"></div>
 <div class="tip" id="tip" hidden></div>

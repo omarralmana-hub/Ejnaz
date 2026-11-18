@@ -39,11 +39,11 @@ ar: {
   marked_done: 'أحسنت، تم تحديده كمنجز', deleted: 'تم الحذف', edited: 'تم حفظ التعديل', title_req: 'الوصف مطلوب',
   edit_work: 'تعديل العمل', desc_l: 'الوصف', cat_f: 'التصنيف', action_f: 'الإجراء', ref_f: 'الرقم المرجعي',
   party_f: 'الجهة / الطرف', date_f: 'التاريخ', hours_f: 'ساعات', status_f: 'الحالة', details_f: 'التفاصيل',
-  del: 'حذف', cancel: 'إلغاء', save: 'حفظ', del_q: 'حذف هذا العمل نهائياً؟', del_yes: 'نعم، احذف',
+  del: 'حذف', cancel: 'إلغاء', save: 'حفظ',
   copied: 'تم النسخ', copy_fail: 'تعذر النسخ', saved: 'تم الحفظ', save_fail: 'تعذر حفظ الملف',
   no_dl: 'التنزيل غير متاح هنا، استخدم «نسخ التقرير كنص»', sep: '، ', report_title: 'تقرير الإنجاز', no: 'رقم',
   fn_backup: 'سجل-إنجاز-عمر-المانع-نسخة-', fn_report: 'سجل-إنجاز-عمر-المانع-',
-  csv_head: 'التاريخ|التاريخ الهجري|اليوم|التصنيف|الإجراء|الوصف|الرقم المرجعي|الجهة|الحالة|الساعات|التفاصيل',
+  csv_head: 'التاريخ|التاريخ الهجري|اليوم|التصنيف|الإجراء|الوصف|الرقم المرجعي|الجهة|الملف|موعد المتابعة|الحالة|الساعات|التفاصيل',
   bad_file: 'الملف غير صالح', no_new: 'لا توجد أعمال جديدة في الملف', importing: 'جارِ استيراد {0}…', imported: 'تم استيراد {0} عمل',
   conn_lost: 'انقطع الاتصال بالبيانات، أعد فتح الصفحة لاحقاً',
   rep_title: 'تنزيل التقرير', rep_daily: 'يومي', rep_monthly: 'شهري', rep_yearly: 'سنوي', rep_kind: 'نوع التقرير',
@@ -54,7 +54,45 @@ ar: {
   fn_rep_day: 'تقرير-يومي-', fn_rep_month: 'تقرير-شهري-', fn_rep_year: 'تقرير-سنوي-',
   col_date: 'التاريخ', col_cat: 'التصنيف', col_act: 'الإجراء', col_title: 'الوصف', col_ref: 'الرقم', col_party: 'الجهة',
   col_status: 'الحالة', col_hours: 'ساعات', generated: 'أُعدّ في', pdf_ready: 'جارِ فتح نافذة الطباعة: اختر «حفظ بصيغة PDF».',
-  by_month: 'حسب الشهر', by_cat_t: 'حسب التصنيف'
+  by_month: 'حسب الشهر', by_cat_t: 'حسب التصنيف',
+  /* notes */
+  notes: 'الملاحظات', notes_tip: 'الملاحظات', note_ph: 'اكتب ملاحظة…', note_add: 'إضافة', note_search: 'بحث في الملاحظات',
+  note_empty: 'لا توجد ملاحظات بعد. دوّن فكرة أو تذكيراً.', note_pin: 'تثبيت', note_unpin: 'إلغاء التثبيت', note_edit: 'تعديل',
+  note_del_q: 'حذف هذه الملاحظة؟', note_saved: 'تم حفظ الملاحظة', note_deleted: 'تم حذف الملاحظة', tab_notes: 'الملاحظات', tab_more: 'المزيد',
+  /* matters and follow-ups */
+  matter_f: 'الملف (عقد / قضية)', matter_ph: 'الملف: العقد أو القضية', due_f: 'موعد المتابعة', due_over: 'متأخر', due_soon: 'قريباً',
+  due_over_n: '{0} متأخر', due_soon_n: '{0} خلال 7 أيام', t_matters: 'حسب الملف', no_matters: 'لا توجد ملفات بعد. أضف «الملف» عند التسجيل.',
+  seg_actions: 'الإجراءات', seg_matters: 'الملفات', col_matter: 'الملف', col_due: 'المتابعة', due_prefix: 'متابعة',
+  /* trash and history */
+  m_trash: 'سلة المحذوفات…', trash_title: 'سلة المحذوفات', trash_empty: 'السلة فارغة', trash_hint: 'تُحذف الأعمال نهائياً بعد 30 يوماً.',
+  restore: 'استرجاع', del_forever: 'حذف نهائي', empty_trash: 'إفراغ السلة', trashed: 'نُقل إلى السلة', undo_l: 'تراجع', restored: 'تم الاسترجاع',
+  del_q: 'نقل هذا العمل إلى السلة؟ يمكنك استرجاعه خلال 30 يوماً.', del_yes: 'نعم، انقل إلى السلة',
+  empty_q: 'حذف كل ما في السلة نهائياً؟', hist_title: 'سجل التعديلات', hist_created: 'أُنشئ', hist_changed: 'عُدّل:',
+  hf_title: 'الوصف', hf_category: 'التصنيف', hf_action: 'الإجراء', hf_ref: 'الرقم', hf_party: 'الجهة', hf_matter: 'الملف', hf_due: 'موعد المتابعة',
+  hf_date: 'التاريخ', hf_hours: 'الساعات', hf_status: 'الحالة', hf_notes: 'التفاصيل',
+  /* backup and sync */
+  m_backup: 'النسخ الاحتياطي والمزامنة…', bk_title: 'نسخ احتياطي ومزامنة', bk_save: 'حفظ ملف نسخة احتياطية', bk_import: 'استيراد ودمج ملف',
+  bk_sync_help: 'للمزامنة بين الكمبيوتر والآيفون: احفظ الملف في OneDrive أو iCloud Drive من جهاز، ثم استورده من الجهاز الآخر. الدمج يضيف الأعمال والملاحظات غير الموجودة ولا يغيّر الموجود.',
+  bk_last: 'آخر نسخة احتياطية: {0}', bk_never: 'لم تُحفظ أي نسخة احتياطية بعد', bk_folder: 'مجلد النسخ التلقائي', bk_choose: 'اختيار مجلد…',
+  bk_now: 'نسخ احتياطي الآن', bk_auto_on: 'نسخ احتياطي تلقائي', bk_auto_help: 'يحفظ ملفاً يومياً في المجلد ويحتفظ بآخر 14 ملفاً. اختر مجلد OneDrive لتصل النسخة إلى هاتفك.',
+  bk_folder_none: 'لم يُختر مجلد', bk_done: 'تم النسخ الاحتياطي', bk_fail: 'تعذر النسخ الاحتياطي: {0}', bk_bar_never: 'لا توجد نسخة احتياطية بعد',
+  bk_bar_old: 'آخر نسخة احتياطية قبل {0} يوماً', dismiss: 'لاحقاً', bk_web_note: 'على الآيفون والمتصفح لا يمكن الحفظ التلقائي، لذلك سنذكّرك أسبوعياً.',
+  /* reminder */
+  m_remind: 'تذكير يومي…', rm_title: 'تذكير يومي بتسجيل الأعمال', rm_time: 'الوقت', rm_days: 'الأيام', rm_text: 'نص التذكير',
+  rm_default: 'سجّل أعمال اليوم في «سجل الإنجاز»', rm_get: 'تنزيل التذكير (.ics)', rm_help: 'افتح الملف على الآيفون أو الكمبيوتر لإضافته إلى التقويم مع تنبيه.',
+  rm_file: 'تذكير-سجل-الإنجاز', rm_need_day: 'اختر يوماً واحداً على الأقل',
+  /* app lock */
+  m_lock: 'قفل التطبيق…', lk_title: 'قفل التطبيق', lk_pin: 'الرمز (4 إلى 8 أرقام)', lk_pin2: 'أعد كتابة الرمز', lk_after: 'القفل بعد مغادرة التطبيق',
+  lk_now: 'فوراً', lk_1: 'بعد دقيقة', lk_5: 'بعد 5 دقائق', lk_15: 'بعد 15 دقيقة', lk_enable: 'تفعيل القفل', lk_off: 'إيقاف القفل', lk_change: 'تغيير الرمز',
+  lk_locked: 'التطبيق مقفل', lk_unlock: 'فتح', lk_wrong: 'الرمز غير صحيح', lk_wait: 'محاولات كثيرة، انتظر {0} ثانية', lk_forgot: 'نسيت الرمز؟',
+  lk_recovery: 'رمز الاسترداد', lk_reset: 'إعادة تعيين', lk_rc_show: 'احتفظ برمز الاسترداد هذا في مكان آمن. يظهر مرة واحدة فقط:',
+  lk_note: 'القفل يمنع الاطلاع العرضي على التطبيق، لكنه لا يشفّر ملف البيانات.', lk_mismatch: 'الرمزان غير متطابقين', lk_bad: 'الرمز يجب أن يكون 4 إلى 8 أرقام',
+  lk_on: 'القفل مفعّل', lk_unsupported: 'القفل غير متاح في هذا المتصفح', lk_saved: 'تم تفعيل القفل', lk_disabled: 'تم إيقاف القفل', lk_enter: 'أدخل الرمز',
+  lk_cur: 'الرمز الحالي', lk_ok: 'حسناً',
+  /* report options */
+  rep_opts: 'خيارات التقرير', rep_cal: 'التقويم', cal_g: 'ميلادي', cal_h: 'هجري', rep_name: 'الاسم', rep_dept: 'الإدارة', rep_jobt: 'المسمى الوظيفي',
+  rep_intro: 'مقدمة أو ملخص (اختياري)', rep_cats: 'التصنيفات المضمّنة', rep_matters: 'قسم الملفات (العقود والقضايا)', rep_notes: 'تفاصيل كل عمل',
+  rep_sign: 'خانة التوقيع', by_matter: 'حسب الملف', prepared_by: 'أعدّه', reviewed_by: 'اعتمده', sign_date: 'التاريخ', ah: 'هـ', followup: 'متابعة'
 },
 en: {
   app_title: 'Omar Almana · Work Log', owner: 'Omar Almana', year_word: 'Year',
@@ -92,11 +130,11 @@ en: {
   marked_done: 'Well done, marked as done', deleted: 'Deleted', edited: 'Changes saved', title_req: 'A description is required',
   edit_work: 'Edit work', desc_l: 'Description', cat_f: 'Category', action_f: 'Action', ref_f: 'Reference no.',
   party_f: 'Party / counterparty', date_f: 'Date', hours_f: 'Hours', status_f: 'Status', details_f: 'Details',
-  del: 'Delete', cancel: 'Cancel', save: 'Save', del_q: 'Delete this work permanently?', del_yes: 'Yes, delete',
+  del: 'Delete', cancel: 'Cancel', save: 'Save',
   copied: 'Copied', copy_fail: 'Could not copy', saved: 'Saved', save_fail: 'Could not save the file',
   no_dl: 'Downloads are not available here, use "Copy report as text"', sep: ', ', report_title: 'Work report', no: 'no.',
   fn_backup: 'Sijil-backup-', fn_report: 'Sijil-',
-  csv_head: 'Date|Hijri date|Day|Category|Action|Description|Reference no.|Party|Status|Hours|Details',
+  csv_head: 'Date|Hijri date|Day|Category|Action|Description|Reference no.|Party|Matter|Follow-up|Status|Hours|Details',
   bad_file: 'The file is not valid', no_new: 'No new work in the file', importing: 'Importing {0}…', imported: 'Imported {0} items',
   conn_lost: 'Lost the connection to your data, reopen the page later',
   rep_title: 'Download report', rep_daily: 'Daily', rep_monthly: 'Monthly', rep_yearly: 'Yearly', rep_kind: 'Report type',
@@ -107,6 +145,44 @@ en: {
   fn_rep_day: 'Sijil-daily-report-', fn_rep_month: 'Sijil-monthly-report-', fn_rep_year: 'Sijil-yearly-report-',
   col_date: 'Date', col_cat: 'Category', col_act: 'Action', col_title: 'Description', col_ref: 'No.', col_party: 'Party',
   col_status: 'Status', col_hours: 'Hours', generated: 'Prepared on', pdf_ready: 'Opening the print window: choose "Save as PDF".',
-  by_month: 'By month', by_cat_t: 'By category'
+  by_month: 'By month', by_cat_t: 'By category',
+  /* notes */
+  notes: 'Notes', notes_tip: 'Notes', note_ph: 'Write a note…', note_add: 'Add', note_search: 'Search notes',
+  note_empty: 'No notes yet. Jot down an idea or a reminder.', note_pin: 'Pin', note_unpin: 'Unpin', note_edit: 'Edit',
+  note_del_q: 'Delete this note?', note_saved: 'Note saved', note_deleted: 'Note deleted', tab_notes: 'Notes', tab_more: 'More',
+  /* matters and follow-ups */
+  matter_f: 'Matter (contract / case)', matter_ph: 'Matter: contract or case', due_f: 'Follow-up date', due_over: 'Overdue', due_soon: 'Due soon',
+  due_over_n: '{0} overdue', due_soon_n: '{0} due within 7 days', t_matters: 'By matter', no_matters: 'No matters yet. Add a matter when logging.',
+  seg_actions: 'Actions', seg_matters: 'Matters', col_matter: 'Matter', col_due: 'Follow-up', due_prefix: 'Follow-up',
+  /* trash and history */
+  m_trash: 'Trash…', trash_title: 'Trash', trash_empty: 'The trash is empty', trash_hint: 'Items are deleted permanently after 30 days.',
+  restore: 'Restore', del_forever: 'Delete forever', empty_trash: 'Empty trash', trashed: 'Moved to the trash', undo_l: 'Undo', restored: 'Restored',
+  del_q: 'Move this work to the trash? You can restore it for 30 days.', del_yes: 'Yes, move to trash',
+  empty_q: 'Delete everything in the trash permanently?', hist_title: 'Edit history', hist_created: 'Created', hist_changed: 'Changed:',
+  hf_title: 'Description', hf_category: 'Category', hf_action: 'Action', hf_ref: 'Number', hf_party: 'Party', hf_matter: 'Matter', hf_due: 'Follow-up date',
+  hf_date: 'Date', hf_hours: 'Hours', hf_status: 'Status', hf_notes: 'Details',
+  /* backup and sync */
+  m_backup: 'Backup & sync…', bk_title: 'Backup & sync', bk_save: 'Save a backup file', bk_import: 'Import & merge a file',
+  bk_sync_help: 'To sync the PC and iPhone: save the file to OneDrive or iCloud Drive on one device, then import it on the other. Merging adds work and notes that are missing and does not change existing items.',
+  bk_last: 'Last backup: {0}', bk_never: 'No backup has been saved yet', bk_folder: 'Automatic backup folder', bk_choose: 'Choose folder…',
+  bk_now: 'Back up now', bk_auto_on: 'Automatic backup', bk_auto_help: 'Saves one file per day in this folder and keeps the last 14. Pick a OneDrive folder so the copy reaches your phone.',
+  bk_folder_none: 'No folder chosen', bk_done: 'Backup saved', bk_fail: 'Backup failed: {0}', bk_bar_never: 'No backup yet',
+  bk_bar_old: 'Last backup {0} days ago', dismiss: 'Later', bk_web_note: 'On iPhone and in a browser, saving cannot happen automatically, so you will get a weekly reminder.',
+  /* reminder */
+  m_remind: 'Daily reminder…', rm_title: 'Daily reminder to log your work', rm_time: 'Time', rm_days: 'Days', rm_text: 'Reminder text',
+  rm_default: 'Log today\'s work in Sijil', rm_get: 'Download reminder (.ics)', rm_help: 'Open the file on your iPhone or computer to add it to the calendar with an alert.',
+  rm_file: 'Sijil-daily-reminder', rm_need_day: 'Choose at least one day',
+  /* app lock */
+  m_lock: 'App lock…', lk_title: 'App lock', lk_pin: 'PIN (4 to 8 digits)', lk_pin2: 'Repeat the PIN', lk_after: 'Lock after leaving the app',
+  lk_now: 'Immediately', lk_1: 'After 1 minute', lk_5: 'After 5 minutes', lk_15: 'After 15 minutes', lk_enable: 'Turn on lock', lk_off: 'Turn off lock', lk_change: 'Change PIN',
+  lk_locked: 'App locked', lk_unlock: 'Unlock', lk_wrong: 'Wrong PIN', lk_wait: 'Too many attempts, wait {0} s', lk_forgot: 'Forgot PIN?',
+  lk_recovery: 'Recovery code', lk_reset: 'Reset', lk_rc_show: 'Keep this recovery code somewhere safe. It is shown only once:',
+  lk_note: 'The lock prevents casual viewing, but it does not encrypt the data file.', lk_mismatch: 'The PINs do not match', lk_bad: 'The PIN must be 4 to 8 digits',
+  lk_on: 'Lock is on', lk_unsupported: 'Lock is not available in this browser', lk_saved: 'Lock turned on', lk_disabled: 'Lock turned off', lk_enter: 'Enter PIN',
+  lk_cur: 'Current PIN', lk_ok: 'OK',
+  /* report options */
+  rep_opts: 'Report options', rep_cal: 'Calendar', cal_g: 'Gregorian', cal_h: 'Hijri', rep_name: 'Name', rep_dept: 'Department', rep_jobt: 'Job title',
+  rep_intro: 'Introduction or summary (optional)', rep_cats: 'Categories included', rep_matters: 'Matters section (contracts and cases)', rep_notes: 'Each work\'s details',
+  rep_sign: 'Signature block', by_matter: 'By matter', prepared_by: 'Prepared by', reviewed_by: 'Reviewed by', sign_date: 'Date', ah: 'AH', followup: 'follow-up'
 }
 };
