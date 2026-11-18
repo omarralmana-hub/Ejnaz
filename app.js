@@ -672,12 +672,42 @@ const LK={get(){try{return JSON.parse(lsGet('sijil.lock')||'null')}catch(e){retu
 const canLock=!!(window.crypto&&window.crypto.subtle);
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 const rnd=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>'abcdefghjkmnpqrstuvwxyz23456789'[x%31]).join('');
+/* passkey (Face ID / Touch ID / Windows Hello): a WebAuthn credential kept on THIS device. It only unlocks the screen;
+   the PIN stays as a fallback. We verify the signature against the public key saved at setup. */
+let pkOk=false;
+try{if(window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(v=>{pkOk=!!v}).catch(()=>{})}catch(e){}
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>Uint8Array.from(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((String(s).length+3)%4)),c=>c.charCodeAt(0));
+function derToRaw(d){ /* ECDSA signature DER -> r||s (64 bytes) for WebCrypto */
+  let i=2;if(d[1]&0x80)i+=d[1]&0x7f;const out=new Uint8Array(64);
+  for(let k=0;k<2;k++){let len=d[i+1],v=d.slice(i+2,i+2+len);i+=2+len;while(v.length>32&&v[0]===0)v=v.slice(1);out.set(v,k*32+32-v.length)}
+  return out;
+}
+async function passkeyCreate(){
+  const c=await navigator.credentials.create({publicKey:{rp:{name:'Sijil'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'sijil',displayName:'Sijil'},challenge:crypto.getRandomValues(new Uint8Array(32)),
+    pubKeyCredParams:[{type:'public-key',alg:-7}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000,attestation:'none'}});
+  const pub=c.response.getPublicKey?c.response.getPublicKey():null;
+  return{id:b64u(c.rawId),pub:pub?b64u(pub):''};
+}
+async function passkeyAssert(pk){
+  const ch=crypto.getRandomValues(new Uint8Array(32));
+  const a=await navigator.credentials.get({publicKey:{challenge:ch,allowCredentials:[{type:'public-key',id:unb64u(pk.id),transports:['internal']}],userVerification:'required',timeout:60000}});
+  const cd=JSON.parse(new TextDecoder().decode(a.response.clientDataJSON));
+  if(cd.type!=='webauthn.get'||cd.challenge!==b64u(ch))return false;
+  const ad=new Uint8Array(a.response.authenticatorData);
+  if(!(ad[32]&4))return false; /* user verification flag (Face ID / fingerprint) */
+  if(!pk.pub)return true;
+  const key=await crypto.subtle.importKey('spki',unb64u(pk.pub),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-256',a.response.clientDataJSON)),data=new Uint8Array(ad.length+32);data.set(ad);data.set(h,ad.length);
+  return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,derToRaw(new Uint8Array(a.response.signature)),data);
+}
+const pkSection=lk=>pkOk||lk.pk?'<div class="lbl">'+tr('lk_pk')+'<div class="brow">'+(lk.pk?'<span class="path">✓ '+tr('lk_pk_on')+'</span><button type="button" class="btn dan" id="pkRm">'+tr('lk_pk_remove')+'</button>':'<button type="button" class="btn" id="pkAdd">'+tr('lk_pk_setup')+'</button>')+'</div></div><p class="note">'+tr('lk_pk_help')+'</p>':'';
 let lockTries=0,lockUntil=0,hiddenAt=0;
 function showLock(){
   const lk=LK.get();if(!lk||$('lockScr'))return;
   const d=document.createElement('div');d.id='lockScr';d.className='lockscr';
   d.innerHTML='<div class="lockbox"><div class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div><h2>'+tr('lk_locked')+'</h2>'+
-    '<input class="in num" id="lkPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+tr('lk_enter')+'" aria-label="'+tr('lk_enter')+'"><button type="button" class="pri" id="lkGo">'+tr('lk_unlock')+'</button><div class="lkmsg" id="lkMsg" role="alert"></div>'+
+    '<input class="in num" id="lkPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="'+tr('lk_enter')+'" aria-label="'+tr('lk_enter')+'"><button type="button" class="pri" id="lkGo">'+tr('lk_unlock')+'</button>'+(lk.pk?'<button type="button" class="btn" id="lkPk">'+tr('lk_pk_unlock')+'</button>':'')+'<div class="lkmsg" id="lkMsg" role="alert"></div>'+
     '<button type="button" class="ghost" id="lkForgot">'+tr('lk_forgot')+'</button><div id="lkRec" hidden><input class="in" id="lkRc" autocomplete="off" placeholder="'+tr('lk_recovery')+'"><button type="button" class="btn" id="lkRs">'+tr('lk_reset')+'</button></div></div>';
   document.body.appendChild(d);
   const msg=t=>{$('lkMsg').textContent=t};
@@ -687,6 +717,10 @@ function showLock(){
     else{lockTries++;$('lkPin').value='';if(lockTries>=5){lockUntil=Date.now()+30000;lockTries=0;msg(tr('lk_wait',30))}else msg(tr('lk_wrong'))}
   };
   $('lkGo').onclick=go;$('lkPin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+  if(lk.pk){
+    const viaPk=async quiet=>{try{if(await passkeyAssert(lk.pk)){lockTries=0;d.remove()}else if(!quiet)msg(tr('lk_pk_fail'))}catch(e){if(!quiet)msg(tr('lk_pk_fail'))}};
+    $('lkPk').onclick=()=>viaPk(false);setTimeout(()=>viaPk(true),350); /* ask for Face ID right away; the button covers the case where the phone needs a tap first */
+  }
   $('lkForgot').onclick=()=>{$('lkRec').hidden=false;$('lkRc').focus()};
   $('lkRs').onclick=async()=>{if(await sha(lk.salt+'rc:'+$('lkRc').value.trim().toLowerCase())===lk.rc){LK.set(null);d.remove();toast(tr('lk_disabled'))}else msg(tr('lk_wrong'))};
   setTimeout(()=>{const p=$('lkPin');if(p)p.focus()},60);
@@ -703,7 +737,8 @@ function openLock(){
   const finish=async(p,mins,keepRc)=>{
     const salt=lk&&keepRc?lk.salt:rnd(12),rcv=keepRc?null:rnd(10);
     LK.set({salt,hash:await sha(salt+p),rc:keepRc?lk.rc:await sha(salt+'rc:'+rcv),mins});
-    if(rcv)dlg(tr('lk_title'),'<p>'+tr('lk_rc_show')+'</p><div class="rcount rc" dir="ltr">'+esc(rcv)+'</div><div class="mfoot"><span></span><button type="button" class="pri" data-act="close">'+tr('lk_ok')+'</button></div>');
+    if(rcv){dlg(tr('lk_title'),'<p>'+tr('lk_rc_show')+'</p><div class="rcount rc" dir="ltr">'+esc(rcv)+'</div><div class="lkmsg" id="lkM" role="alert"></div><div class="mfoot">'+(pkOk?'<button type="button" class="btn" id="pkAdd2">'+tr('lk_pk_setup')+'</button>':'<span></span>')+'<button type="button" class="pri" data-act="close">'+tr('lk_ok')+'</button></div>');
+      const b=$('pkAdd2');if(b)b.onclick=async()=>{try{const pk=await passkeyCreate();LK.set({...LK.get(),pk});closeModal();toast(tr('lk_saved'))}catch(e){$('lkM').textContent=tr('lk_pk_fail')}}}
     else closeModal();
     toast(tr('lk_saved'));
   };
@@ -711,10 +746,12 @@ function openLock(){
     dlg(tr('lk_title'),pin('lkP1',tr('lk_pin'))+pin('lkP2',tr('lk_pin2'))+sel(5)+'<p class="note">'+tr('lk_note')+'</p><div class="lkmsg" id="lkM" role="alert"></div><div class="mfoot"><span></span><button type="button" class="pri" id="lkOn">'+tr('lk_enable')+'</button></div>');
     $('lkOn').onclick=()=>{const a=$('lkP1').value,b=$('lkP2').value;if(!okPin(a)){$('lkM').textContent=tr('lk_bad');return}if(a!==b){$('lkM').textContent=tr('lk_mismatch');return}finish(a,+$('lkMins').value,false)};
   }else{
-    dlg(tr('lk_title'),'<div class="rcount">'+tr('lk_on')+'</div>'+sel(lk.mins||0)+pin('lkCur',tr('lk_cur'))+'<div class="brow"><button type="button" class="btn dan" id="lkOff">'+tr('lk_off')+'</button><button type="button" class="btn" id="lkChg">'+tr('lk_change')+'</button></div>'+
+    dlg(tr('lk_title'),'<div class="rcount">'+tr('lk_on')+'</div>'+sel(lk.mins||0)+pkSection(lk)+pin('lkCur',tr('lk_cur'))+'<div class="brow"><button type="button" class="btn dan" id="lkOff">'+tr('lk_off')+'</button><button type="button" class="btn" id="lkChg">'+tr('lk_change')+'</button></div>'+
       '<div id="lkNew" hidden>'+pin('lkN1',tr('lk_pin'))+pin('lkN2',tr('lk_pin2'))+'<button type="button" class="pri" id="lkSv">'+tr('lk_change')+'</button></div><p class="note">'+tr('lk_note')+'</p><div class="lkmsg" id="lkM" role="alert"></div>');
     const verify=async()=>{if(await sha(lk.salt+$('lkCur').value)===lk.hash)return true;$('lkM').textContent=tr('lk_wrong');return false};
     $('lkMins').onchange=()=>{LK.set({...LK.get(),mins:+$('lkMins').value})};
+    const pa=$('pkAdd');if(pa)pa.onclick=async()=>{try{const pk=await passkeyCreate();LK.set({...LK.get(),pk});toast(tr('lk_saved'));openLock()}catch(e){$('lkM').textContent=tr('lk_pk_fail')}};
+    const pr=$('pkRm');if(pr)pr.onclick=()=>{const l=LK.get();delete l.pk;LK.set(l);openLock()};
     $('lkOff').onclick=async()=>{if(await verify()){LK.set(null);closeModal();toast(tr('lk_disabled'))}};
     $('lkChg').onclick=async()=>{if(await verify())$('lkNew').hidden=false};
     $('lkSv').onclick=()=>{const a=$('lkN1').value,b=$('lkN2').value;if(!okPin(a)){$('lkM').textContent=tr('lk_bad');return}if(a!==b){$('lkM').textContent=tr('lk_mismatch');return}finish(a,+$('lkMins').value,true)};

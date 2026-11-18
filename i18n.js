@@ -89,6 +89,9 @@ ar: {
   lk_note: 'القفل يمنع الاطلاع العرضي على التطبيق، لكنه لا يشفّر ملف البيانات.', lk_mismatch: 'الرمزان غير متطابقين', lk_bad: 'الرمز يجب أن يكون 4 إلى 8 أرقام',
   lk_on: 'القفل مفعّل', lk_unsupported: 'القفل غير متاح في هذا المتصفح', lk_saved: 'تم تفعيل القفل', lk_disabled: 'تم إيقاف القفل', lk_enter: 'أدخل الرمز',
   lk_cur: 'الرمز الحالي', lk_ok: 'حسناً',
+  lk_pk: 'Face ID / مفتاح المرور', lk_pk_setup: 'إعداد Face ID / مفتاح المرور على هذا الجهاز', lk_pk_remove: 'إزالة', lk_pk_on: 'مفتاح المرور مفعّل على هذا الجهاز',
+  lk_pk_unlock: 'فتح بـ Face ID / مفتاح المرور', lk_pk_fail: 'تعذر التحقق بمفتاح المرور، استخدم الرمز',
+  lk_pk_help: 'يستخدم Face ID أو Touch ID في هذا الجهاز. يبقى الرمز بديلاً دائماً. المفتاح يبقى على هذا الجهاز ولا يدخل في النسخ الاحتياطية.',
   /* report options */
   rep_opts: 'خيارات التقرير', rep_cal: 'التقويم', cal_g: 'ميلادي', cal_h: 'هجري', rep_name: 'الاسم', rep_dept: 'الإدارة', rep_jobt: 'المسمى الوظيفي',
   rep_intro: 'مقدمة أو ملخص (اختياري)', rep_cats: 'التصنيفات المضمّنة', rep_matters: 'قسم الملفات (العقود والقضايا)', rep_notes: 'تفاصيل كل عمل',
@@ -180,6 +183,9 @@ en: {
   lk_note: 'The lock prevents casual viewing, but it does not encrypt the data file.', lk_mismatch: 'The PINs do not match', lk_bad: 'The PIN must be 4 to 8 digits',
   lk_on: 'Lock is on', lk_unsupported: 'Lock is not available in this browser', lk_saved: 'Lock turned on', lk_disabled: 'Lock turned off', lk_enter: 'Enter PIN',
   lk_cur: 'Current PIN', lk_ok: 'OK',
+  lk_pk: 'Face ID / passkey', lk_pk_setup: 'Set up Face ID / passkey on this device', lk_pk_remove: 'Remove', lk_pk_on: 'Passkey is set on this device',
+  lk_pk_unlock: 'Unlock with Face ID / passkey', lk_pk_fail: 'Could not verify the passkey, use your PIN',
+  lk_pk_help: 'Uses Face ID or Touch ID on this device. Your PIN always stays as a fallback. The passkey stays on this device and is not part of backups.',
   /* report options */
   rep_opts: 'Report options', rep_cal: 'Calendar', cal_g: 'Gregorian', cal_h: 'Hijri', rep_name: 'Name', rep_dept: 'Department', rep_jobt: 'Job title',
   rep_intro: 'Introduction or summary (optional)', rep_cats: 'Categories included', rep_matters: 'Matters section (contracts and cases)', rep_notes: 'Each work\'s details',
